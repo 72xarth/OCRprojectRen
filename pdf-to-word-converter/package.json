@@ -1,0 +1,20 @@
+{
+  "name": "pdf-to-word-converter",
+  "version": "1.0.0",
+  "description": "Convert PDF to Word documents in browser",
+  "main": "index.html",
+  "scripts": {
+    "start": "http-server -p 3000",
+    "dev": "live-server --port=3000",
+    "build": "echo 'No build process needed for static site'"
+  },
+  "dependencies": {
+    "pdfjs-dist": "^3.11.174",
+    "docx": "^7.8.2",
+    "file-saver": "^2.0.5"
+  },
+  "devDependencies": {
+    "http-server": "^14.1.1",
+    "live-server": "^1.2.2"
+  }
+}

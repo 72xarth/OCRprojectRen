@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OCR Document System - ระบบแปลงเอกสาร</title>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        @font-face {
+            font-family: 'TH SarabunIT๙';
+            src: local('TH Sarabun New'), local('TH SarabunPSK'), local('Sarabun');
+            font-weight: normal;
+            font-style: normal;
+        }
+
+        body {
+            font-family: 'TH SarabunIT๙', 'Sarabun', 'TH Sarabun New', sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            background-attachment: fixed;
+            min-height: 100vh;
+            padding: 0;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: #ffffff;
+            box-shadow: 0 0 100px rgba(0,0,0,0.5);
+            min-height: 100vh;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 50%, #2563eb 100%);
+            color: white;
+            padding: 30px 50px;
+            position: relative;
+        }
+
+        .header-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .header h1 {
+            font-size: 2.2em;
+            margin-bottom: 10px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.95;
+            font-weight: 400;
+        }
+
+        .main-content {
+            padding: 50px;
+            background: linear-gradient(to bottom, #f8fafc 0%, #f1f5f9 100%);
+            min-height: calc(100vh - 200px);
+        }
+
+        .upload-section {
+            border: 2px solid #1e40af;
+            border-radius: 12px;
+            padding: 60px;
+            text-align: center;
+            margin-bottom: 40px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            background: white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .upload-section:hover {
+            border-color: #3b82f6;
+            background: #f0f9ff;
+            box-shadow: 0 8px 24px rgba(30, 64, 175, 0.15);
+            transform: translateY(-3px);
+        }
+
+        .upload-section.dragover {
+            border-color: #3b82f6;
+            background: #dbeafe;
+            transform: scale(1.01);
+            box-shadow: 0 12px 32px rgba(59, 130, 246, 0.2);
+        }
+
+        .upload-icon {
+            font-size: 4em;
+            margin-bottom: 20px;
+            color: #1e40af;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .upload-btn {
+            background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 50%, #2563eb 100%);
+            color: white;
+            border: none;
+            padding: 16px 50px;
+            border-radius: 8px;
+            font-size: 1.2em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 15px;
+            font-family: 'TH SarabunIT๙', 'Sarabun', sans-serif;
+            box-shadow: 0 4px 12px rgba(30, 64, 175, 0.25);
+        }
+
+        .upload-btn:hover {
+            background: linear-gradient(135deg, #1e40af 0%, #2563eb 50%, #3b82f6 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(30, 64, 175, 0.35);
+        }
+
+        .upload-btn:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 8px rgba(30, 64, 175, 0.3);
+        }
+
+        .upload-btn:disabled {
+            background: #94a3b8;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .preview-section {
+            display: none;
+            margin-bottom: 30px;
+        }
+
+        .preview-section.active {
+            display: block;
+        }
+
+        .result-section {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: white;
+            z-index: 1000;
+            overflow: hidden;
+            flex-direction: column;
+        }
+
+        .result-section.active {
+            display: flex;
+        }
+
+        .top-action-bar {
+            background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 50%, #2563eb 100%);
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            flex-wrap: wrap;
+            gap: 10px;
+            border-bottom: 3px solid #3b82f6;
+            position: relative;
+            z-index: 10;
+        }
+
+        .action-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .action-btn-top {
+            padding: 11px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-family: 'TH SarabunIT๙', 'Sarabun', sans-serif;
+        }
+
+        .copy-btn-top {
+            background: white;
+            color: #1e40af;
+            border: 2px solid #1e40af;
+        }
+
+        .copy-btn-top:hover {
+            background: #eff6ff;
+            transform: translateY(-1px);
+        }
+
+        .download-word-btn {
+            background: #0f766e;
+            color: white;
+        }
+
+        .download-word-btn:hover {
+            background: #0d9488;
+            transform: translateY(-1px);
+        }
+
+        .download-txt-btn {
+            background: #15803d;
+            color: white;
+        }
+
+        .download-txt-btn:hover {
+            background: #16a34a;
+            transform: translateY(-1px);
+        }
+
+        .new-btn {
+            background: #dc2626;
+            color: white;
+        }
+
+        .new-btn:hover {
+            background: #ef4444;
+            transform: translateY(-1px);
+        }
+
+        .format-btn {
+            background: #ea580c;
+            color: white;
+        }
+
+        .format-btn:hover {
+            background: #f97316;
+            transform: translateY(-1px);
+        }
+
+        .search-bar {
+            padding: 15px 30px;
+            background: linear-gradient(to right, #f8fafc 0%, #f1f5f9 100%);
+            border-bottom: 2px solid #e2e8f0;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            position: relative;
+            z-index: 9;
+        }
+
+        .search-input {
+            flex: 1;
+            min-width: 250px;
+            padding: 12px 20px;
+            border: 2px solid #1e40af;
+            border-radius: 8px;
+            font-size: 1.05em;
+            font-family: 'TH SarabunIT๙', 'Sarabun', sans-serif;
+            transition: all 0.3s ease;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+        }
+
+        .search-button, .clear-search-button, .nav-button {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: 'TH SarabunIT๙', 'Sarabun', sans-serif;
+        }
+
+        .search-button {
+            background: #1e40af;
+            color: white;
+        }
+
+        .search-button:hover {
+            background: #1e3a8a;
+            transform: translateY(-1px);
+        }
+
+        .clear-search-button {
+            background: #64748b;
+            color: white;
+        }
+
+        .clear-search-button:hover {
+            background: #475569;
+            transform: translateY(-1px);
+        }
+
+        .nav-button {
+            background: #1e40af;
+            color: white;
+            min-width: 48px;
+            font-size: 1.2em;
+        }
+
+        .nav-button:hover:not(:disabled) {
+            background: #1e3a8a;
+            transform: translateY(-1px);
+        }
+
+        .nav-button:disabled {
+            background: #cbd5e1;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .search-counter {
+            padding: 12px 20px;
+            background: white;
+            border: 2px solid #1e40af;
+            border-radius: 8px;
+            font-weight: 700;
+            color: #1e40af;
+            min-width: 90px;
+            text-align: center;
+            font-family: 'TH SarabunIT๙', 'Sarabun', sans-serif;
+            font-size: 1.1em;
+            box-shadow: 0 2px 8px rgba(30, 64, 175, 0.1);
+        }
+
+        .format-toolbar {
+            padding: 15px 30px;
+            background: white;
+            border-bottom: 2px solid #e2e8f0;
+            display: none;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            position: relative;
+            z-index: 8;
+        }
+
+        .format-toolbar.active {
+            display: flex;
+        }
+
+        .format-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            padding: 10px 16px;
+            background: #f8fafc;
+            border-radius: 8px;
+            border: 2px solid #e2e8f0;
+            transition: all 0.3s ease;
+        }
+
+        .format-group:hover {
+            border-color: #1e40af;
+            box-shadow: 0 2px 8px rgba(30, 64, 175, 0.1);
+        }
+
+        .format-group label {
+            font-weight: 600;
+            color: #1e40af;
+            white-space: nowrap;
+            font-family: 'TH SarabunIT๙', 'Sarabun', sans-serif;
+            font-size: 1.05em;
+        }
+
+        .format-select {
+            padding: 8px 12px;
+            border: 2px solid #1e40af;
+            border-radius: 6px;
+            font-size: 0.95em;
+            cursor: pointer;
+            font-family: 'TH SarabunIT๙', 'Sarabun', sans-serif;
+            background: white;
+            transition: all 0.3s ease;
+        }
+
+        .format-select:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .format-apply-btn {
+            background: #1e40af;
+            color: white;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: 'TH SarabunIT๙', 'Sarabun', sans-serif;
+            font-size: 1.05em;
+            transition: all 0.2s ease;
+        }
+
+        .format-apply-btn:hover {
+            background: #1e3a8a;
+            transform: translateY(-1px);
+        }
+
+        .result-display-full {
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding: 50px 60px 50px 50px;
+            background: #ffffff;
+            font-size: 26px;
+            line-height: 1.8;
+            color: #1e293b;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            font-family: 'TH SarabunIT๙', 'Sarabun', 'TH Sarabun New', sans-serif;
+            scroll-behavior: smooth;
+            position: relative;
+        }
+
+        /* Custom Scrollbar - ภายใน box */
+        .result-display-full::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        .result-display-full::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 5px;
+            margin: 5px 0;
+        }
+
+        .result-display-full::-webkit-scrollbar-thumb {
+            background: #1e40af;
+            border-radius: 5px;
+            border: 2px solid #f1f5f9;
+        }
+
+        .result-display-full::-webkit-scrollbar-thumb:hover {
+            background: #1e3a8a;
+        }
+
+        .result-display-full mark {
+            background: #fef08a;
+            padding: 3px 6px;
+            border-radius: 3px;
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .result-display-full mark.current {
+            background: #fbbf24;
+            box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.3);
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 60px;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .spinner {
+            border: 5px solid #e2e8f0;
+            border-top: 5px solid #1e40af;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 25px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error, .success {
+            padding: 16px 24px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            display: none;
+            font-weight: 600;
+            font-family: 'TH SarabunIT๙', 'Sarabun', sans-serif;
+            font-size: 1.05em;
+        }
+
+        .error {
+            background: #fee2e2;
+            color: #991b1b;
+            border-left: 5px solid #dc2626;
+        }
+
+        .success {
+            background: #d1fae5;
+            color: #065f46;
+            border-left: 5px solid #059669;
+        }
+
+        .error.active, .success.active {
+            display: block;
+        }
+
+        .info-section {
+            margin-top: 40px;
+            padding: 30px;
+            background: white;
+            border-radius: 12px;
+            border-left: 5px solid #1e40af;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+
+        .info-section h3 {
+            color: #1e3a8a;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            font-weight: 700;
+        }
+
+        .info-section ul {
+            list-style: none;
+            line-height: 2.2;
+            color: #334155;
+        }
+
+        .info-section li {
+            padding: 8px 0;
+            font-size: 1.1em;
+            padding-left: 30px;
+            position: relative;
+        }
+
+        .info-section li::before {
+            content: '▸';
+            position: absolute;
+            left: 0;
+            color: #1e40af;
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 25px;
+            background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
+            color: white;
+            font-size: 0.95em;
+            font-weight: 500;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 0;
+            }
+            .header h1 {
+                font-size: 1.5em;
+            }
+            .header {
+                padding: 20px 25px;
+            }
+            .main-content {
+                padding: 25px;
+            }
+            .upload-section {
+                padding: 40px 20px;
+            }
+            .action-btn-top {
+                font-size: 0.85em;
+                padding: 9px 14px;
+            }
+            .result-display-full {
+                padding: 25px;
+                font-size: 22px;
+            }
+            .search-bar {
+                padding: 12px 15px;
+            }
+            .format-toolbar {
+                padding: 12px 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-content">
+                <h1>📋 ระบบแปลงเอกสารอัจฉริยะ</h1>
+                <p>OCR Document Processing System - รองรับภาษาไทยและอังกฤษด้วย AI</p>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="error" id="errorMessage"></div>
+            <div class="success" id="successMessage"></div>
+
+            <div class="upload-section" id="uploadSection">
+                <div class="upload-icon">📄</div>
+                <h2 style="color: #1e3a8a; margin-bottom: 18px; font-size: 1.8em; font-weight: 700;">อัปโหลดไฟล์ PDF</h2>
+                <p style="margin: 12px 0; color: #64748b; font-size: 1.1em;">ลากและวางไฟล์ที่นี่ หรือ</p>
+                <input type="file" id="fileInput" class="file-input" accept="application/pdf">
+                <button class="upload-btn" onclick="document.getElementById('fileInput').click()">
+                    <span style="position: relative; z-index: 1;">เลือกไฟล์เอกสาร</span>
+                </button>
+                <p style="margin-top: 20px; color: #64748b; font-size: 1em;">
+                    รองรับไฟล์: <strong>PDF</strong> (สูงสุด 20MB)
+                </p>
+            </div>
+
+            <div class="preview-section" id="previewSection">
+                <h3 style="margin-bottom: 18px; color: #1e3a8a; font-weight: 700; font-size: 1.4em;">📄 ไฟล์ที่เลือก:</h3>
+                <div style="padding: 25px; background: white; border-radius: 12px; margin-bottom: 25px; border: 2px solid #e2e8f0; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+                    <p id="fileName" style="font-weight: 600; color: #1e40af; margin-bottom: 8px; font-size: 1.15em;"></p>
+                    <p id="fileSize" style="color: #64748b; font-size: 1em;"></p>
+                </div>
+                <button class="upload-btn" id="processBtn">
+                    <span style="position: relative; z-index: 1;">🚀 เริ่มแปลงเอกสาร</span>
+                </button>
+            </div>
+
+            <div class="loading" id="loadingSection">
+                <div class="spinner"></div>
+                <p style="color: #1e40af; font-size: 1.4em; font-weight: 700; margin-bottom: 10px;">กำลังประมวลผล...</p>
+                <p style="color: #64748b; font-size: 1.1em;">โปรดรอสักครู่ ระบบกำลังแปลงเอกสารของคุณ</p>
+            </div>
+
+            <div class="result-section" id="resultSection">
+                <div class="top-action-bar">
+                    <div class="action-group">
+                        <button class="action-btn-top copy-btn-top" id="copyBtn">
+                            <span>📋</span> คัดลอก
+                        </button>
+                        <button class="action-btn-top download-word-btn" id="downloadWordBtn">
+                            <span>📘</span> Word
+                        </button>
+                        <button class="action-btn-top download-txt-btn" id="downloadTxtBtn">
+                            <span>📝</span> TXT
+                        </button>
+                        <button class="action-btn-top format-btn" id="formatToggleBtn">
+                            <span>🎨</span> จัดรูปแบบ
+                        </button>
+                    </div>
+                    <div class="action-group">
+                        <button class="action-btn-top new-btn" id="newBtn">
+                            <span>↻</span> เริ่มใหม่
+                        </button>
+                    </div>
+                </div>
+
+                <div class="format-toolbar" id="formatToolbar">
+                    <div class="format-group">
+                        <label>ขนาดตัวอักษร:</label>
+                        <select class="format-select" id="fontSizeSelect">
+                            <option value="20px">เล็ก (20)</option>
+                            <option value="24px">ปกติ (24)</option>
+                            <option value="26px" selected>กลาง (26)</option>
+                            <option value="28px">ใหญ่ (28)</option>
+                            <option value="32px">ใหญ่มาก (32)</option>
+                        </select>
+                    </div>
+                    <div class="format-group">
+                        <label>ระยะบรรทัด:</label>
+                        <select class="format-select" id="lineHeightSelect">
+                            <option value="1.5">แน่น (1.5)</option>
+                            <option value="1.7">ปกติ (1.7)</option>
+                            <option value="1.8" selected>สบายตา (1.8)</option>
+                            <option value="2.0">กว้าง (2.0)</option>
+                            <option value="2.2">กว้างมาก (2.2)</option>
+                        </select>
+                    </div>
+                    <div class="format-group">
+                        <label>แบบอักษร:</label>
+                        <select class="format-select" id="fontFamilySelect">
+                            <option value="'TH SarabunIT๙', 'Sarabun', 'TH Sarabun New', sans-serif" selected>TH SarabunIT๙</option>
+                            <option value="'Sarabun', sans-serif">Sarabun</option>
+                            <option value="'TH Sarabun New', sans-serif">TH Sarabun New</option>
+                            <option value="'Arial', sans-serif">Arial</option>
+                            <option value="'Courier New', monospace">Courier New</option>
+                        </select>
+                    </div>
+                    <button class="format-apply-btn" id="applyFormatBtn">✓ ใช้การตั้งค่า</button>
+                </div>
+                
+                <div class="search-bar">
+                    <input type="text" id="searchText" class="search-input" placeholder="🔍 ค้นหาข้อความในเอกสาร... (กด Enter)">
+                    <button class="search-button" id="searchBtn">ค้นหา</button>
+                    <button class="nav-button" id="prevBtn" title="ก่อนหน้า (Shift+Enter)">▲</button>
+                    <div class="search-counter" id="searchCounter">0/0</div>
+                    <button class="nav-button" id="nextBtn" title="ถัดไป (Enter)">▼</button>
+                    <button class="clear-search-button" id="clearSearchBtn">ล้างการค้นหา</button>
+                </div>
+                
+                <div id="resultDisplay" class="result-display-full"></div>
+            </div>
+
+            <div class="info-section">
+                <h3>📌 คู่มือการใช้งานระบบ</h3>
+                <ul>
+                    <li>📤 เลือกหรือลากวางไฟล์ PDF ที่ต้องการแปลงเป็นข้อความ</li>
+                    <li>🚀 กดปุ่ม "เริ่มแปลงเอกสาร" และรอระบบประมวลผล (ใช้เวลาประมาณ 10-30 วินาที)</li>
+                    <li>🔍 ใช้ช่องค้นหาเพื่อค้นหาข้อความที่ต้องการ กด Enter เพื่อข้ามไปยังคำถัดไป</li>
+                    <li>📘 ดาวน์โหลดผลลัพธ์เป็นไฟล์ Word (.doc) หรือ Text (.txt) เพื่อนำไปใช้งานต่อ</li>
+                    <li>🎨 ปรับแต่งขนาดตัวอักษร ระยะบรรทัด และฟอนต์ให้เหมาะกับการอ่าน</li>
+                    <li>📋 คัดลอกข้อความทั้งหมดได้ด้วยปุ่มคัดลอก สามารถนำไปวางในโปรแกรมอื่นได้ทันที</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>© 2025 OCR Document System | Powered by Mistral AI Technology</p>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
