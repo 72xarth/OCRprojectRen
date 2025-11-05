@@ -162,6 +162,129 @@
             display: flex;
         }
 
+        /* Metadata Section */
+        .metadata-section {
+            display: none;
+            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+            border: 2px solid #1e40af;
+            border-radius: 12px;
+            padding: 25px 30px;
+            margin: 0;
+            box-shadow: 0 4px 16px rgba(30, 64, 175, 0.15);
+            position: relative;
+            z-index: 7;
+        }
+
+        .metadata-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #1e40af;
+        }
+
+        .metadata-title {
+            font-size: 1.3em;
+            font-weight: 700;
+            color: #1e3a8a;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .copy-metadata-btn {
+            background: #1e40af;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: 'TH SarabunIT๙', 'Sarabun', sans-serif;
+            font-size: 1em;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .copy-metadata-btn:hover {
+            background: #1e3a8a;
+            transform: translateY(-1px);
+        }
+
+        .metadata-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+        }
+
+        .metadata-item {
+            background: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            border-left: 4px solid #3b82f6;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .metadata-label {
+            font-weight: 700;
+            color: #1e40af;
+            font-size: 1.05em;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .metadata-value {
+            color: #1e293b;
+            font-size: 1.1em;
+            line-height: 1.6;
+        }
+
+        .summary-sentence {
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            border: 3px solid #3b82f6;
+            border-radius: 10px;
+            padding: 20px 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 16px rgba(59, 130, 246, 0.2);
+        }
+
+        .summary-label {
+            font-weight: 700;
+            color: #1e40af;
+            font-size: 1.15em;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .summary-text {
+            background: #f0f9ff;
+            padding: 18px 22px;
+            border-radius: 8px;
+            color: #1e293b;
+            font-size: 1.25em;
+            line-height: 1.8;
+            border: 2px solid #93c5fd;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .summary-text:hover {
+            background: #dbeafe;
+            border-color: #3b82f6;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+        }
+
+        .summary-text:active {
+            transform: translateY(0);
+        }
+
         .top-action-bar {
             background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 50%, #2563eb 100%);
             padding: 15px 30px;
@@ -248,6 +371,16 @@
             transform: translateY(-1px);
         }
 
+        .reprocess-btn {
+            background: #7c3aed;
+            color: white;
+        }
+
+        .reprocess-btn:hover {
+            background: #6d28d9;
+            transform: translateY(-1px);
+        }
+
         .search-bar {
             padding: 15px 30px;
             background: linear-gradient(to right, #f8fafc 0%, #f1f5f9 100%);
@@ -307,6 +440,47 @@
         .clear-search-button:hover {
             background: #475569;
             transform: translateY(-1px);
+        }
+
+        .qa-toggle-button {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: 'TH SarabunIT๙', 'Sarabun', sans-serif;
+            background: #64748b;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .qa-toggle-button:hover {
+            background: #475569;
+            transform: translateY(-1px);
+        }
+
+        .qa-question-highlight {
+            background: linear-gradient(90deg, #fef3c7 0%, #fde68a 100%);
+            color: #92400e;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-weight: 700;
+            box-shadow: 0 2px 6px rgba(245, 158, 11, 0.3);
+            border: 2px solid #f59e0b;
+        }
+
+        .qa-answer-highlight {
+            background: linear-gradient(90deg, #d1fae5 0%, #a7f3d0 100%);
+            color: #064e3b;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-weight: 700;
+            box-shadow: 0 2px 6px rgba(5, 150, 105, 0.3);
+            border: 2px solid #059669;
         }
 
         .nav-button {
@@ -595,6 +769,12 @@
             .format-toolbar {
                 padding: 12px 15px;
             }
+            .metadata-section {
+                padding: 20px;
+            }
+            .metadata-grid {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
@@ -656,12 +836,28 @@
                         <button class="action-btn-top format-btn" id="formatToggleBtn">
                             <span>🎨</span> จัดรูปแบบ
                         </button>
+                        <button class="action-btn-top reprocess-btn" id="reprocessBtn">
+                            <span>🔄</span> แปลงอีกรอบ
+                        </button>
                     </div>
                     <div class="action-group">
                         <button class="action-btn-top new-btn" id="newBtn">
                             <span>↻</span> เริ่มใหม่
                         </button>
                     </div>
+                </div>
+
+                <!-- Metadata Section -->
+                <div class="metadata-section" id="metadataSection">
+                    <div class="metadata-header">
+                        <div class="metadata-title">
+                            📌 ข้อมูลเกริ่นนำเอกสาร
+                        </div>
+                        <button class="copy-metadata-btn" id="copyMetadataBtn">
+                            📋 คัดลอก
+                        </button>
+                    </div>
+                    <div id="metadataDisplay"></div>
                 </div>
 
                 <div class="format-toolbar" id="formatToolbar">
@@ -705,6 +901,9 @@
                     <div class="search-counter" id="searchCounter">0/0</div>
                     <button class="nav-button" id="nextBtn" title="ถัดไป (Enter)">▼</button>
                     <button class="clear-search-button" id="clearSearchBtn">ล้างการค้นหา</button>
+                    <button class="qa-toggle-button" id="qaToggleBtn">
+                        <span>💬</span> โหมดถาม-ตอบ
+                    </button>
                 </div>
                 
                 <div id="resultDisplay" class="result-display-full"></div>
@@ -715,10 +914,14 @@
                 <ul>
                     <li>📤 เลือกหรือลากวางไฟล์ PDF ที่ต้องการแปลงเป็นข้อความ</li>
                     <li>🚀 กดปุ่ม "เริ่มแปลงเอกสาร" และรอระบบประมวลผล (ใช้เวลาประมาณ 10-30 วินาที)</li>
+                    <li>🔄 หากผลลัพธ์ไม่ถูกต้อง กดปุ่ม "แปลงอีกรอบ" เพราะ AI อาจให้ผลต่างกันในแต่ละครั้ง</li>
+                    <li>🔢 ระบบจะแปลงเลขอารบิก (0-9) เป็นเลขไทย (๐-๙) อัตโนมัติทั้งหมด</li>
+                    <li>📌 ระบบจะดึงข้อมูลสำคัญจากหน้าแรกมาแสดงอัตโนมัติ (เลขที่เอกสาร วันที่ ผู้ส่ง ฯลฯ)</li>
+                    <li>💬 เปิด "โหมดถาม-ตอบ" เพื่อไฮไลท์คำว่า "ถาม" (เหลือง) และ "ตอบ" (เขียว) ทุกคำในเอกสาร</li>
                     <li>🔍 ใช้ช่องค้นหาเพื่อค้นหาข้อความที่ต้องการ กด Enter เพื่อข้ามไปยังคำถัดไป</li>
                     <li>📘 ดาวน์โหลดผลลัพธ์เป็นไฟล์ Word (.doc) หรือ Text (.txt) เพื่อนำไปใช้งานต่อ</li>
                     <li>🎨 ปรับแต่งขนาดตัวอักษร ระยะบรรทัด และฟอนต์ให้เหมาะกับการอ่าน</li>
-                    <li>📋 คัดลอกข้อความทั้งหมดได้ด้วยปุ่มคัดลอก สามารถนำไปวางในโปรแกรมอื่นได้ทันที</li>
+                    <li>📋 คัดลอกข้อความทั้งหมดหรือเฉพาะข้อมูลเกริ่นนำได้ด้วยปุ่มคัดลอก</li>
                 </ul>
             </div>
         </div>
