@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OCR Document System - ระบบแปลงเอกสาร</title>
+    <title>OCR Document System - ระบบแปลงเอกสาร + Editor</title>
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">
     <!-- PDF.js Library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
@@ -579,6 +579,7 @@
             display: block;
         }
 
+        /* ===== SPLIT SCREEN EDITOR ===== */
         .result-section {
             display: none;
             position: fixed;
@@ -596,132 +597,10 @@
             display: flex;
         }
 
-        /* Metadata Section */
-        .metadata-section {
-            display: none;
-            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
-            border: 2px solid #1e40af;
-            border-radius: 12px;
-            padding: 25px 30px;
-            margin: 0;
-            box-shadow: 0 4px 16px rgba(30, 64, 175, 0.15);
-            position: relative;
-            z-index: 7;
-        }
-
-        .metadata-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            padding-bottom: 15px;
-            border-bottom: 2px solid #1e40af;
-        }
-
-        .metadata-title {
-            font-size: 1.3em;
-            font-weight: 700;
-            color: #1e3a8a;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .copy-metadata-btn {
-            background: #1e40af;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 6px;
-            font-weight: 600;
-            cursor: pointer;
-            font-family: 'TH SarabunIT๙', 'Sarabun', sans-serif;
-            font-size: 1em;
-            transition: all 0.2s ease;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .copy-metadata-btn:hover {
-            background: #1e3a8a;
-            transform: translateY(-1px);
-        }
-
-        .metadata-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 15px;
-        }
-
-        .metadata-item {
-            background: white;
-            padding: 15px 20px;
-            border-radius: 8px;
-            border-left: 4px solid #3b82f6;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-        }
-
-        .metadata-label {
-            font-weight: 700;
-            color: #1e40af;
-            font-size: 1.05em;
-            display: block;
-            margin-bottom: 5px;
-        }
-
-        .metadata-value {
-            color: #1e293b;
-            font-size: 1.1em;
-            line-height: 1.6;
-        }
-
-        .summary-sentence {
-            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
-            border: 3px solid #3b82f6;
-            border-radius: 10px;
-            padding: 20px 25px;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 16px rgba(59, 130, 246, 0.2);
-        }
-
-        .summary-label {
-            font-weight: 700;
-            color: #1e40af;
-            font-size: 1.15em;
-            margin-bottom: 12px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .summary-text {
-            background: #f0f9ff;
-            padding: 18px 22px;
-            border-radius: 8px;
-            color: #1e293b;
-            font-size: 1.25em;
-            line-height: 1.8;
-            border: 2px solid #93c5fd;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-weight: 600;
-        }
-
-        .summary-text:hover {
-            background: #dbeafe;
-            border-color: #3b82f6;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
-        }
-
-        .summary-text:active {
-            transform: translateY(0);
-        }
-
+        /* Top Action Bar */
         .top-action-bar {
             background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 50%, #2563eb 100%);
-            padding: 15px 30px;
+            padding: 12px 25px;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -735,23 +614,44 @@
 
         .action-group {
             display: flex;
-            gap: 10px;
+            gap: 8px;
             align-items: center;
             flex-wrap: wrap;
         }
 
         .action-btn-top {
-            padding: 11px 20px;
+            padding: 10px 18px;
             border: none;
             border-radius: 6px;
-            font-size: 1em;
+            font-size: 0.95em;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.2s ease;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
             font-family: 'TH SarabunIT๙', 'Sarabun', sans-serif;
+        }
+
+        .action-btn-top:hover {
+            transform: translateY(-1px);
+        }
+
+        .editor-toggle-btn {
+            background: #059669;
+            color: white;
+        }
+
+        .editor-toggle-btn:hover {
+            background: #047857;
+        }
+
+        .editor-toggle-btn.closed {
+            background: #7c3aed;
+        }
+
+        .editor-toggle-btn.closed:hover {
+            background: #6d28d9;
         }
 
         .copy-btn-top {
@@ -762,7 +662,6 @@
 
         .copy-btn-top:hover {
             background: #eff6ff;
-            transform: translateY(-1px);
         }
 
         .download-word-btn {
@@ -772,7 +671,6 @@
 
         .download-word-btn:hover {
             background: #0d9488;
-            transform: translateY(-1px);
         }
 
         .download-txt-btn {
@@ -782,7 +680,6 @@
 
         .download-txt-btn:hover {
             background: #16a34a;
-            transform: translateY(-1px);
         }
 
         .new-btn {
@@ -792,35 +689,160 @@
 
         .new-btn:hover {
             background: #ef4444;
-            transform: translateY(-1px);
         }
 
-        .format-btn {
+        .reprocess-btn {
             background: #ea580c;
             color: white;
         }
 
-        .format-btn:hover {
+        .reprocess-btn:hover {
             background: #f97316;
-            transform: translateY(-1px);
         }
 
-        .reprocess-btn {
-            background: #7c3aed;
+        .ocr-more-btn {
+            background: #0891b2;
             color: white;
         }
 
-        .reprocess-btn:hover {
-            background: #6d28d9;
+        .ocr-more-btn:hover {
+            background: #0e7490;
+        }
+
+        .close-metadata-btn {
+            background: #dc2626;
+        }
+
+        .close-metadata-btn:hover {
+            background: #b91c1c;
+        }
+
+        /* Metadata Section */
+        .metadata-section {
+            display: none;
+            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+            border: 2px solid #1e40af;
+            border-radius: 12px;
+            padding: 20px 25px;
+            margin: 0;
+            box-shadow: 0 4px 16px rgba(30, 64, 175, 0.15);
+            position: relative;
+            z-index: 7;
+        }
+
+        .metadata-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #1e40af;
+        }
+
+        .metadata-title {
+            font-size: 1.2em;
+            font-weight: 700;
+            color: #1e3a8a;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .copy-metadata-btn {
+            background: #1e40af;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: 'TH SarabunIT๙', 'Sarabun', sans-serif;
+            font-size: 0.95em;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .copy-metadata-btn:hover {
+            background: #1e3a8a;
             transform: translateY(-1px);
         }
 
+        .metadata-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 12px;
+        }
+
+        .metadata-item {
+            background: white;
+            padding: 12px 16px;
+            border-radius: 8px;
+            border-left: 4px solid #3b82f6;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .metadata-label {
+            font-weight: 700;
+            color: #1e40af;
+            font-size: 1em;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .metadata-value {
+            color: #1e293b;
+            font-size: 1.05em;
+            line-height: 1.5;
+        }
+
+        .summary-sentence {
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            border: 3px solid #3b82f6;
+            border-radius: 10px;
+            padding: 16px 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 16px rgba(59, 130, 246, 0.2);
+        }
+
+        .summary-label {
+            font-weight: 700;
+            color: #1e40af;
+            font-size: 1.05em;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .summary-text {
+            background: #f0f9ff;
+            padding: 14px 18px;
+            border-radius: 8px;
+            color: #1e293b;
+            font-size: 1.15em;
+            line-height: 1.6;
+            border: 2px solid #93c5fd;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .summary-text:hover {
+            background: #dbeafe;
+            border-color: #3b82f6;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+        }
+
+        /* Search Bar */
         .search-bar {
-            padding: 15px 30px;
+            padding: 12px 25px;
             background: linear-gradient(to right, #f8fafc 0%, #f1f5f9 100%);
             border-bottom: 2px solid #e2e8f0;
             display: flex;
-            gap: 10px;
+            gap: 8px;
             align-items: center;
             flex-wrap: wrap;
             box-shadow: 0 2px 8px rgba(0,0,0,0.05);
@@ -830,11 +852,11 @@
 
         .search-input {
             flex: 1;
-            min-width: 250px;
-            padding: 12px 20px;
+            min-width: 200px;
+            padding: 10px 16px;
             border: 2px solid #1e40af;
             border-radius: 8px;
-            font-size: 1.05em;
+            font-size: 1em;
             font-family: 'TH SarabunIT๙', 'Sarabun', sans-serif;
             transition: all 0.3s ease;
         }
@@ -846,10 +868,10 @@
         }
 
         .search-button, .clear-search-button, .nav-button {
-            padding: 12px 20px;
+            padding: 10px 16px;
             border: none;
             border-radius: 6px;
-            font-size: 1em;
+            font-size: 0.95em;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.2s ease;
@@ -877,10 +899,10 @@
         }
 
         .qa-toggle-button {
-            padding: 12px 20px;
+            padding: 10px 16px;
             border: none;
             border-radius: 6px;
-            font-size: 1em;
+            font-size: 0.95em;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.2s ease;
@@ -889,7 +911,7 @@
             color: white;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
         }
 
         .qa-toggle-button:hover {
@@ -900,8 +922,8 @@
         .qa-question-highlight {
             background: linear-gradient(90deg, #fef3c7 0%, #fde68a 100%);
             color: #92400e;
-            padding: 4px 10px;
-            border-radius: 6px;
+            padding: 3px 8px;
+            border-radius: 5px;
             font-weight: 700;
             box-shadow: 0 2px 6px rgba(245, 158, 11, 0.3);
             border: 2px solid #f59e0b;
@@ -910,8 +932,8 @@
         .qa-answer-highlight {
             background: linear-gradient(90deg, #d1fae5 0%, #a7f3d0 100%);
             color: #064e3b;
-            padding: 4px 10px;
-            border-radius: 6px;
+            padding: 3px 8px;
+            border-radius: 5px;
             font-weight: 700;
             box-shadow: 0 2px 6px rgba(5, 150, 105, 0.3);
             border: 2px solid #059669;
@@ -920,8 +942,8 @@
         .nav-button {
             background: #1e40af;
             color: white;
-            min-width: 48px;
-            font-size: 1.2em;
+            min-width: 42px;
+            font-size: 1.1em;
         }
 
         .nav-button:hover:not(:disabled) {
@@ -936,102 +958,60 @@
         }
 
         .search-counter {
-            padding: 12px 20px;
+            padding: 10px 16px;
             background: white;
             border: 2px solid #1e40af;
             border-radius: 8px;
             font-weight: 700;
             color: #1e40af;
-            min-width: 90px;
+            min-width: 80px;
             text-align: center;
             font-family: 'TH SarabunIT๙', 'Sarabun', sans-serif;
-            font-size: 1.1em;
+            font-size: 1em;
             box-shadow: 0 2px 8px rgba(30, 64, 175, 0.1);
         }
 
-        .format-toolbar {
-            padding: 15px 30px;
-            background: white;
-            border-bottom: 2px solid #e2e8f0;
-            display: none;
-            gap: 15px;
-            align-items: center;
-            flex-wrap: wrap;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-            position: relative;
-            z-index: 8;
+        /* ===== SPLIT VIEW CONTAINER ===== */
+        .split-view-container {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+            transition: all 0.3s ease;
         }
 
-        .format-toolbar.active {
+        /* Original View Panel (ซ้าย) */
+        .original-panel {
+            flex: 1;
             display: flex;
-        }
-
-        .format-group {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-            padding: 10px 16px;
+            flex-direction: column;
+            border-right: 3px solid #1e40af;
             background: #f8fafc;
-            border-radius: 8px;
-            border: 2px solid #e2e8f0;
-            transition: all 0.3s ease;
+            overflow: hidden;
         }
 
-        .format-group:hover {
-            border-color: #1e40af;
-            box-shadow: 0 2px 8px rgba(30, 64, 175, 0.1);
+        .original-panel.full-width {
+            flex: 1;
         }
 
-        .format-group label {
-            font-weight: 600;
-            color: #1e40af;
-            white-space: nowrap;
-            font-family: 'TH SarabunIT๙', 'Sarabun', sans-serif;
-            font-size: 1.05em;
-        }
-
-        .format-select {
-            padding: 8px 12px;
-            border: 2px solid #1e40af;
-            border-radius: 6px;
-            font-size: 0.95em;
-            cursor: pointer;
-            font-family: 'TH SarabunIT๙', 'Sarabun', sans-serif;
-            background: white;
-            transition: all 0.3s ease;
-        }
-
-        .format-select:focus {
-            outline: none;
-            border-color: #3b82f6;
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-        }
-
-        .format-apply-btn {
-            background: #1e40af;
+        .panel-header {
+            background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
             color: white;
-            border: none;
-            padding: 10px 24px;
-            border-radius: 6px;
-            font-weight: 600;
-            cursor: pointer;
-            font-family: 'TH SarabunIT๙', 'Sarabun', sans-serif;
-            font-size: 1.05em;
-            transition: all 0.2s ease;
-        }
-
-        .format-apply-btn:hover {
-            background: #1e3a8a;
-            transform: translateY(-1px);
+            padding: 12px 20px;
+            font-weight: 700;
+            font-size: 1.1em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
 
         .result-display-full {
             flex: 1;
             overflow-y: auto;
             overflow-x: hidden;
-            padding: 50px 60px 50px 50px;
+            padding: 30px;
             background: #ffffff;
-            font-size: 26px;
+            font-size: 24px;
             line-height: 1.8;
             color: #1e293b;
             white-space: pre-wrap;
@@ -1040,46 +1020,30 @@
             scroll-behavior: smooth;
             position: relative;
             user-select: text;
-            -webkit-user-select: text;
-            -moz-user-select: text;
-            -ms-user-select: text;
         }
 
-        /* Selection styling */
         .result-display-full::selection {
             background: #bfdbfe;
             color: #1e293b;
         }
 
-        .result-display-full::-moz-selection {
-            background: #bfdbfe;
-            color: #1e293b;
-        }
-
-        /* Custom Scrollbar */
         .result-display-full::-webkit-scrollbar {
-            width: 10px;
+            width: 8px;
         }
 
         .result-display-full::-webkit-scrollbar-track {
             background: #f1f5f9;
-            border-radius: 5px;
-            margin: 5px 0;
+            border-radius: 4px;
         }
 
         .result-display-full::-webkit-scrollbar-thumb {
             background: #1e40af;
-            border-radius: 5px;
-            border: 2px solid #f1f5f9;
-        }
-
-        .result-display-full::-webkit-scrollbar-thumb:hover {
-            background: #1e3a8a;
+            border-radius: 4px;
         }
 
         .result-display-full mark {
             background: #fef08a;
-            padding: 3px 6px;
+            padding: 2px 5px;
             border-radius: 3px;
             font-weight: 600;
             color: #1e293b;
@@ -1090,6 +1054,146 @@
             box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.3);
         }
 
+        /* Editor Panel (ขวา) */
+        .editor-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: #ffffff;
+            overflow: hidden;
+        }
+
+        .editor-panel.hidden {
+            display: none;
+        }
+
+        .editor-toolbar {
+            background: #f8fafc;
+            padding: 10px 20px;
+            border-bottom: 2px solid #e2e8f0;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .editor-btn {
+            padding: 8px 14px;
+            border: 2px solid #cbd5e1;
+            background: white;
+            color: #1e40af;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: 'TH SarabunIT๙', 'Sarabun', sans-serif;
+            font-size: 0.9em;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .editor-btn:hover {
+            background: #eff6ff;
+            border-color: #1e40af;
+            transform: translateY(-1px);
+        }
+
+        .editor-btn.active {
+            background: #1e40af;
+            color: white;
+            border-color: #1e40af;
+        }
+
+        .editor-copy-from-original {
+            background: #10b981;
+            color: white;
+            border-color: #10b981;
+        }
+
+        .editor-copy-from-original:hover {
+            background: #059669;
+            border-color: #059669;
+        }
+
+        .editor-separator {
+            width: 1px;
+            height: 24px;
+            background: #cbd5e1;
+            margin: 0 4px;
+        }
+
+        .editor-select {
+            padding: 8px 12px;
+            border: 2px solid #cbd5e1;
+            border-radius: 6px;
+            font-size: 0.9em;
+            cursor: pointer;
+            font-family: 'TH SarabunIT๙', 'Sarabun', sans-serif;
+            background: white;
+            color: #1e40af;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+
+        .editor-select:hover {
+            border-color: #1e40af;
+            background: #eff6ff;
+        }
+
+        .editor-select:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .color-input {
+            width: 40px;
+            height: 32px;
+            border: 2px solid #cbd5e1;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .color-input:hover {
+            border-color: #1e40af;
+            transform: scale(1.05);
+        }
+
+        /* Editable Content */
+        .editor-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 30px;
+            font-size: 26px;
+            line-height: 1.8;
+            color: #1e293b;
+            font-family: 'TH Sarabun New', 'TH SarabunIT๙', 'Sarabun', sans-serif;
+            background: #ffffff;
+            outline: none;
+        }
+
+        .editor-content::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .editor-content::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 4px;
+        }
+
+        .editor-content::-webkit-scrollbar-thumb {
+            background: #3b82f6;
+            border-radius: 4px;
+        }
+
+        .editor-content:focus {
+            background: #fffbf0;
+        }
+
+        /* Loading & Messages */
         .loading {
             display: none;
             text-align: center;
@@ -1116,13 +1220,13 @@
         }
 
         .error, .success {
-            padding: 16px 24px;
+            padding: 14px 20px;
             border-radius: 8px;
-            margin-bottom: 25px;
+            margin-bottom: 20px;
             display: none;
             font-weight: 600;
             font-family: 'TH SarabunIT๙', 'Sarabun', sans-serif;
-            font-size: 1.05em;
+            font-size: 1em;
         }
 
         .error {
@@ -1141,6 +1245,7 @@
             display: block;
         }
 
+        /* Info Section */
         .info-section {
             margin-top: 40px;
             padding: 30px;
@@ -1188,6 +1293,22 @@
             font-weight: 500;
         }
 
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .split-view-container {
+                flex-direction: column;
+            }
+
+            .original-panel {
+                border-right: none;
+                border-bottom: 3px solid #1e40af;
+            }
+
+            .editor-panel {
+                max-height: 50vh;
+            }
+        }
+
         @media (max-width: 768px) {
             body {
                 padding: 0;
@@ -1212,23 +1333,27 @@
             }
             .action-btn-top {
                 font-size: 0.85em;
-                padding: 9px 14px;
+                padding: 8px 12px;
             }
             .result-display-full {
-                padding: 25px;
-                font-size: 22px;
+                padding: 20px;
+                font-size: 20px;
+            }
+            .editor-content {
+                padding: 20px;
+                font-size: 20px;
             }
             .search-bar {
-                padding: 12px 15px;
-            }
-            .format-toolbar {
-                padding: 12px 15px;
+                padding: 10px 15px;
             }
             .metadata-section {
-                padding: 20px;
+                padding: 15px;
             }
             .metadata-grid {
                 grid-template-columns: 1fr;
+            }
+            .editor-toolbar {
+                padding: 8px 15px;
             }
         }
     </style>
@@ -1237,8 +1362,8 @@
     <div class="container">
         <div class="header">
             <div class="header-content">
-                <h1>📋 ระบบแปลงเอกสารอัจฉริยะ (ใหม่! เลือกหน้าได้)</h1>
-                <p>OCR Document Processing System - รองรับภาษาไทยและอังกฤษด้วย AI + เลือกหน้าที่ต้องการแปลง</p>
+                <h1>📋 ระบบแปลงเอกสารอัจฉริยะ + Editor</h1>
+                <p>OCR Document Processing System - รองรับภาษาไทยและอังกฤษด้วย AI + แก้ไขได้ทันที</p>
             </div>
         </div>
 
@@ -1393,15 +1518,18 @@
                 </button>
             </div>
 
-            <!-- Result Section -->
+            <!-- Result Section with Split Screen Editor -->
             <div class="result-section" id="resultSection">
                 <div class="top-action-bar">
                     <div class="action-group">
+                        <button class="action-btn-top editor-toggle-btn" id="editorToggleBtn">
+                            <span>✏️</span> ปิด Editor
+                        </button>
+                        <button class="action-btn-top ocr-more-btn" id="ocrMoreBtn">
+                            <span>📄+</span> OCR หน้าอื่นต่อ
+                        </button>
                         <button class="action-btn-top copy-btn-top" id="copyBtn">
                             <span>📋</span> คัดลอกทั้งหมด
-                        </button>
-                        <button class="action-btn-top copy-btn-top" id="copySelectedBtn" style="display: none;">
-                            <span>✂️</span> คัดลอกที่เลือก
                         </button>
                         <button class="action-btn-top download-word-btn" id="downloadWordBtn">
                             <span>📘</span> Word
@@ -1409,10 +1537,7 @@
                         <button class="action-btn-top download-txt-btn" id="downloadTxtBtn">
                             <span>📝</span> TXT
                         </button>
-                        <button class="action-btn-top format-btn" id="formatToggleBtn">
-                            <span>🎨</span> จัดรูปแบบ
-                        </button>
-                        <button class="action-btn-top reprocess-btn" id="reprocessBtn">
+                        <button class="action-btn-top reprocess-btn" id="reprocessBtn" style="display: none;">
                             <span>🔄</span> แปลงอีกรอบ
                         </button>
                     </div>
@@ -1429,90 +1554,144 @@
                         <div class="metadata-title">
                             📌 ข้อมูลเกริ่นนำเอกสาร
                         </div>
-                        <button class="copy-metadata-btn" id="copyMetadataBtn">
-                            📋 คัดลอก
-                        </button>
+                        <div style="display: flex; gap: 8px;">
+                            <button class="copy-metadata-btn" id="copyMetadataBtn">
+                                📋 คัดลอก
+                            </button>
+                            <button class="copy-metadata-btn close-metadata-btn" id="closeMetadataBtn" title="ปิดหน้าเกริ่นนำ">
+                                ✕ ปิด
+                            </button>
+                        </div>
                     </div>
                     <div id="metadataDisplay"></div>
                 </div>
 
-                <div class="format-toolbar" id="formatToolbar">
-                    <div class="format-group">
-                        <label>ขนาดตัวอักษร:</label>
-                        <select class="format-select" id="fontSizeSelect">
-                            <option value="20px">เล็ก (20)</option>
-                            <option value="24px">ปกติ (24)</option>
-                            <option value="26px" selected>กลาง (26)</option>
-                            <option value="28px">ใหญ่ (28)</option>
-                            <option value="32px">ใหญ่มาก (32)</option>
-                        </select>
-                    </div>
-                    <div class="format-group">
-                        <label>ระยะบรรทัด:</label>
-                        <select class="format-select" id="lineHeightSelect">
-                            <option value="1.5">แน่น (1.5)</option>
-                            <option value="1.7">ปกติ (1.7)</option>
-                            <option value="1.8" selected>สบายตา (1.8)</option>
-                            <option value="2.0">กว้าง (2.0)</option>
-                            <option value="2.2">กว้างมาก (2.2)</option>
-                        </select>
-                    </div>
-                    <div class="format-group">
-                        <label>แบบอักษร:</label>
-                        <select class="format-select" id="fontFamilySelect">
-                            <option value="'TH SarabunIT๙', 'Sarabun', 'TH Sarabun New', sans-serif" selected>TH SarabunIT๙</option>
-                            <option value="'Sarabun', sans-serif">Sarabun</option>
-                            <option value="'TH Sarabun New', sans-serif">TH Sarabun New</option>
-                            <option value="'Arial', sans-serif">Arial</option>
-                            <option value="'Courier New', monospace">Courier New</option>
-                        </select>
-                    </div>
-                    <button class="format-apply-btn" id="applyFormatBtn">✓ ใช้การตั้งค่า</button>
-                </div>
-                
                 <div class="search-bar">
                     <input type="text" id="searchText" class="search-input" placeholder="🔍 ค้นหาข้อความในเอกสาร... (กด Enter)">
                     <button class="search-button" id="searchBtn">ค้นหา</button>
                     <button class="nav-button" id="prevBtn" title="ก่อนหน้า (Shift+Enter)">▲</button>
                     <div class="search-counter" id="searchCounter">0/0</div>
                     <button class="nav-button" id="nextBtn" title="ถัดไป (Enter)">▼</button>
-                    <button class="clear-search-button" id="clearSearchBtn">ล้างการค้นหา</button>
+                    <button class="clear-search-button" id="clearSearchBtn">ล้าง</button>
                     <button class="qa-toggle-button" id="qaToggleBtn">
-                        <span>💬</span> โหมดถาม-ตอบ
+                        <span>💬</span> ถาม-ตอบ
                     </button>
                 </div>
                 
-                <div id="resultDisplay" class="result-display-full"></div>
+                <!-- Split View Container -->
+                <div class="split-view-container">
+                    <!-- Original Panel (Left) -->
+                    <div class="original-panel" id="originalPanel">
+                        <div class="panel-header">
+                            <span>📄</span> ข้อความต้นฉบับจาก OCR
+                        </div>
+                        <div id="resultDisplay" class="result-display-full"></div>
+                    </div>
+
+                    <!-- Editor Panel (Right) -->
+                    <div class="editor-panel" id="editorPanel">
+                        <div class="panel-header">
+                            <span>✏️</span> Editor - พิมพ์หรือแก้ไขได้เลย (คัดลอกจากซ้ายมาแก้ได้)
+                        </div>
+                        
+                        <!-- Editor Toolbar -->
+                        <div class="editor-toolbar">
+                            <button class="editor-btn editor-copy-from-original" id="copyFromOriginalBtn" title="คัดลอกจากฝั่งซ้าย">
+                                <span>👈</span> คัดลอกต้นฉบับ
+                            </button>
+
+                            <div class="editor-separator"></div>
+
+                            <button class="editor-btn" id="boldBtn" title="ตัวหนา">
+                                <strong>B</strong>
+                            </button>
+                            <button class="editor-btn" id="italicBtn" title="ตัวเอียง">
+                                <em>I</em>
+                            </button>
+                            <button class="editor-btn" id="underlineBtn" title="ขีดเส้นใต้">
+                                <u>U</u>
+                            </button>
+
+                            <div class="editor-separator"></div>
+
+                            <select class="editor-select" id="fontSizeEditor">
+                                <option value="18px">18px</option>
+                                <option value="20px">20px</option>
+                                <option value="22px">22px</option>
+                                <option value="24px">24px</option>
+                                <option value="26px" selected>26px (แนะนำ)</option>
+                                <option value="28px">28px</option>
+                                <option value="32px">32px</option>
+                                <option value="36px">36px</option>
+                            </select>
+
+                            <select class="editor-select" id="fontFamilyEditor">
+                                <option value="'TH Sarabun New', 'TH SarabunIT๙', 'Sarabun', sans-serif" selected>TH Sarabun New (Word)</option>
+                                <option value="'TH SarabunIT๙', 'Sarabun', sans-serif">TH SarabunIT๙</option>
+                                <option value="'Sarabun', sans-serif">Sarabun</option>
+                                <option value="'Arial', sans-serif">Arial</option>
+                                <option value="'Courier New', monospace">Courier New</option>
+                            </select>
+
+                            <div class="editor-separator"></div>
+
+                            <input type="color" class="color-input" id="textColorPicker" value="#1e293b" title="สีตัวอักษร">
+                            <input type="color" class="color-input" id="bgColorPicker" value="#ffffff" title="สีพื้นหลัง">
+
+                            <div class="editor-separator"></div>
+
+                            <button class="editor-btn" id="copyEditedBtn" title="คัดลอกข้อความที่แก้ไขแล้ว">
+                                <span>📋</span> คัดลอก
+                            </button>
+
+                            <button class="editor-btn" id="resetEditorBtn" title="รีเซ็ตเป็นข้อความเดิม">
+                                <span>↺</span> รีเซ็ต
+                            </button>
+                        </div>
+
+                        <!-- Editable Content -->
+                        <div class="editor-content" id="editorContent" contenteditable="true" spellcheck="false">
+                            👈 คัดลอกข้อความจากฝั่งซ้าย แล้วมาแก้ไขที่นี่...
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <div class="info-section">
-                <h3>📌 คู่มือการใช้งานระบบ (เวอร์ชันใหม่)</h3>
+                <h3>📌 คู่มือการใช้งานระบบ (เวอร์ชันใหม่ + Editor แบบต่อเนื่อง)</h3>
                 <ul>
                     <li>📤 เลือกหรือลากวางไฟล์ PDF ที่ต้องการแปลงเป็นข้อความ</li>
-                    <li>📑 <strong>ใหม่!</strong> เลือกหน้าที่ต้องการแปลง 4 วิธี:
+                    <li>📑 เลือกหน้าที่ต้องการแปลง 4 วิธี: ทุกหน้า / ช่วงหน้า / พิมพ์ระบุ / คลิกเลือก</li>
+                    <li>🚀 กดปุ่ม "เริ่มแปลงหน้าที่เลือก" และดูความคืบหน้าแบบเรียลไทม์</li>
+                    <li>✏️ <strong>Editor เปิดอัตโนมัติ!</strong> หน้าจอแบ่ง 2 ฝั่ง:
                         <ul style="margin-left: 30px; margin-top: 8px;">
-                            <li>✅ ทุกหน้า (แนะนำสำหรับเอกสารสั้น)</li>
-                            <li>📊 ช่วงหน้า (เช่น หน้า 1-10)</li>
-                            <li>🎯 พิมพ์ระบุ (เช่น 1,3,5-7,10)</li>
-                            <li>🖱️ <strong>คลิกเลือก</strong> - ง่ายที่สุด! คลิกหน้าที่ต้องการได้เลย</li>
+                            <li>📄 ฝั่งซ้าย = ข้อความต้นฉบับจาก OCR (อ่านอย่างเดียว)</li>
+                            <li>✏️ ฝั่งขวา = Editor (เริ่มเป็นหน้าว่าง พร้อมแก้ไข)</li>
                         </ul>
                     </li>
-                    <li>🚀 กดปุ่ม "เริ่มแปลงหน้าที่เลือก" และดูความคืบหน้าแบบเรียลไทม์</li>
-                    <li>⚡ ระบบจะแปลงทีละหน้า แม่นยำกว่า ข้อความไม่หาย!</li>
-                    <li>✂️ <strong>ใหม่!</strong> คัดลอกได้ 2 แบบ: ทั้งหมด หรือ เลือกเฉพาะส่วนที่ต้องการ (ลากเมาส์เลือกข้อความแล้วกดปุ่ม)</li>
-                    <li>🔄 หากผลลัพธ์ไม่ถูกต้อง กดปุ่ม "แปลงอีกรอบ" เพราะ AI อาจให้ผลต่างกันในแต่ละครั้ง</li>
-                    <li>🔢 ระบบจะแปลงเลขอารบิก (0-9) เป็นเลขไทย (๐-๙) อัตโนมัติทั้งหมด</li>
-                    <li>📌 ระบบจะดึงข้อมูลสำคัญจากหน้าแรกมาแสดงอัตโนมัติ (เลขที่เอกสาร วันที่ ผู้ส่ง ฯลฯ)</li>
-                    <li>💬 เปิด "โหมดถาม-ตอบ" เพื่อไฮไลท์คำว่า "ถาม" (เหลือง) และ "ตอบ" (เขียว) ทุกคำในเอกสาร</li>
-                    <li>🔍 ใช้ช่องค้นหาเพื่อค้นหาข้อความที่ต้องการ กด Enter เพื่อข้ามไปยังคำถัดไป</li>
-                    <li>📘 ดาวน์โหลดผลลัพธ์เป็นไฟล์ Word (.doc) หรือ Text (.txt) เพื่อนำไปใช้งานต่อ</li>
-                    <li>🎨 ปรับแต่งขนาดตัวอักษร ระยะบรรทัด และฟอนต์ให้เหมาะกับการอ่าน</li>
+                    <li>👈 <strong>คัดลอกต้นฉบับ</strong>: กดปุ่ม "คัดลอกต้นฉบับ" (สีเขียว) เพื่อเอาข้อความจากซ้ายมาแก้ไข</li>
+                    <li>🎨 ใช้เครื่องมือ Editor: ตัวหนา (B), ตัวเอียง (I), ขีดเส้นใต้ (U), เปลี่ยนขนาด, เปลี่ยนฟอนต์, เปลี่ยนสี</li>
+                    <li>📄+ <strong>OCR หน้าอื่นต่อ (ใหม่!)</strong>: กดปุ่ม "OCR หน้าอื่นต่อ" (สีฟ้า) เพื่อเลือก OCR หน้าอื่นเพิ่ม โดย:
+                        <ul style="margin-left: 30px; margin-top: 8px;">
+                            <li>✅ Editor ของคุณถูกบันทึกไว้อัตโนมัติ</li>
+                            <li>✅ OCR หน้าใหม่เสร็จ → Editor กลับมาพร้อมข้อความเดิม</li>
+                            <li>✅ ทำงานต่อเนื่องได้โดยไม่ต้องกังวล</li>
+                        </ul>
+                    </li>
+                    <li>💾 <strong>บันทึกพร้อมฟอนต์</strong>: ดาวน์โหลด Word จะบันทึก TH Sarabun New (26px) พร้อมการจัดรูปแบบ</li>
+                    <li>📋 คัดลอกข้อความที่แก้ไขแล้วจาก Editor หรือดาวน์โหลดเป็น Word/TXT</li>
+                    <li>🔄 กดปุ่ม "รีเซ็ต" ใน Editor เพื่อเคลียร์เป็นหน้าว่างใหม่</li>
+                    <li>✕ <strong>ปิดหน้าเกริ่นนำ</strong>: กดปุ่ม "✕ ปิด" (สีแดง) เพื่อปิดข้อมูลเกริ่นนำ</li>
+                    <li>🔍 ใช้ช่องค้นหาเพื่อค้นหาข้อความในเอกสารฝั่งซ้าย</li>
+                    <li>💬 เปิด "โหมดถาม-ตอบ" เพื่อไฮไลท์คำว่า "ถาม" (เหลือง) และ "ตอบ" (เขียว)</li>
+                    <li>📘 ดาวน์โหลดผลลัพธ์เป็น Word (.doc) หรือ Text (.txt)</li>
+                    <li>↻ กด "เริ่มใหม่" เพื่อ reset ทุกอย่างรวมถึง Editor</li>
                 </ul>
             </div>
         </div>
 
         <div class="footer">
-            <p>© 2025 OCR Document System v2.0 | Powered by Mistral AI Technology | 🆕 Page-by-Page Processing</p>
+            <p>© 2025 OCR Document System v3.0 | Powered by Mistral AI | ✏️ Now with Real-time Editor!</p>
         </div>
     </div>
 

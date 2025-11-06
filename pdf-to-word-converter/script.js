@@ -22,12 +22,6 @@ const copyBtn = document.getElementById('copyBtn');
 const downloadWordBtn = document.getElementById('downloadWordBtn');
 const downloadTxtBtn = document.getElementById('downloadTxtBtn');
 const newBtn = document.getElementById('newBtn');
-const formatToggleBtn = document.getElementById('formatToggleBtn');
-const formatToolbar = document.getElementById('formatToolbar');
-const fontSizeSelect = document.getElementById('fontSizeSelect');
-const lineHeightSelect = document.getElementById('lineHeightSelect');
-const fontFamilySelect = document.getElementById('fontFamilySelect');
-const applyFormatBtn = document.getElementById('applyFormatBtn');
 const errorMessage = document.getElementById('errorMessage');
 const successMessage = document.getElementById('successMessage');
 const fileName = document.getElementById('fileName');
@@ -50,9 +44,6 @@ const selectAllPagesBtn = document.getElementById('selectAllPages');
 const deselectAllPagesBtn = document.getElementById('deselectAllPages');
 let selectedPages = new Set();
 
-// Copy Selected Button
-const copySelectedBtn = document.getElementById('copySelectedBtn');
-
 // Progress Elements
 const progressBar = document.getElementById('progressBar');
 const progressText = document.getElementById('progressText');
@@ -66,6 +57,24 @@ const pageResultStatus = document.getElementById('pageResultStatus');
 const metadataSection = document.getElementById('metadataSection');
 const metadataDisplay = document.getElementById('metadataDisplay');
 const copyMetadataBtn = document.getElementById('copyMetadataBtn');
+const closeMetadataBtn = document.getElementById('closeMetadataBtn');
+const ocrMoreBtn = document.getElementById('ocrMoreBtn');
+
+// Editor Elements
+const editorToggleBtn = document.getElementById('editorToggleBtn');
+const editorPanel = document.getElementById('editorPanel');
+const originalPanel = document.getElementById('originalPanel');
+const editorContent = document.getElementById('editorContent');
+const copyFromOriginalBtn = document.getElementById('copyFromOriginalBtn');
+const boldBtn = document.getElementById('boldBtn');
+const italicBtn = document.getElementById('italicBtn');
+const underlineBtn = document.getElementById('underlineBtn');
+const fontSizeEditor = document.getElementById('fontSizeEditor');
+const fontFamilyEditor = document.getElementById('fontFamilyEditor');
+const textColorPicker = document.getElementById('textColorPicker');
+const bgColorPicker = document.getElementById('bgColorPicker');
+const copyEditedBtn = document.getElementById('copyEditedBtn');
+const resetEditorBtn = document.getElementById('resetEditorBtn');
 
 // Global Variables
 let selectedFile = null;
@@ -79,6 +88,7 @@ let currentFileName = '';
 let qaMode = false;
 let processingStartTime = null;
 let timerInterval = null;
+let editorMode = true; // เปิด Editor ตั้งแต่แรก
 
 // Arabic to Thai number conversion
 function convertToThaiNumbers(text) {
@@ -479,11 +489,22 @@ async function processSelectedPages(pages) {
         // Show results
         displayResult();
         
+        // Restore editor content if available (from OCR More Pages)
+        const editorBackup = sessionStorage.getItem('editorBackup');
+        if (editorBackup) {
+            editorContent.innerHTML = editorBackup;
+            sessionStorage.removeItem('editorBackup');
+            sessionStorage.removeItem('editorTextBackup');
+            showSuccess(`✅ แปลงสำเร็จ ${successfulPages} หน้า + Editor ของคุณถูกกลับคืนมาแล้ว!`);
+        }
+        
         progressSection.classList.remove('active');
         resultSection.classList.add('active');
         
         const totalChars = fullOCRResult.length;
-        showSuccess(`✅ แปลงสำเร็จ ${successfulPages} หน้า (${totalChars.toLocaleString()} ตัวอักษร) ${failedPages > 0 ? `| ล้มเหลว ${failedPages} หน้า` : ''}`);
+        if (!editorBackup) {
+            showSuccess(`✅ แปลงสำเร็จ ${successfulPages} หน้า (${totalChars.toLocaleString()} ตัวอักษร) ${failedPages > 0 ? `| ล้มเหลว ${failedPages} หน้า` : ''}`);
+        }
         
     } catch (error) {
         stopTimer();
@@ -945,6 +966,127 @@ if (copyMetadataBtn) {
     });
 }
 
+// Close metadata section
+if (closeMetadataBtn) {
+    closeMetadataBtn.addEventListener('click', () => {
+        metadataSection.style.display = 'none';
+        showSuccess('✓ ปิดหน้าเกริ่นนำแล้ว');
+    });
+}
+
+// ============================================
+// EDITOR FUNCTIONS
+// ============================================
+
+// Toggle editor panel (now starts open, can be closed)
+editorToggleBtn.addEventListener('click', () => {
+    editorMode = !editorMode;
+    
+    if (editorMode) {
+        // เปิด Editor
+        editorPanel.classList.remove('hidden');
+        editorToggleBtn.classList.remove('closed');
+        editorToggleBtn.innerHTML = '<span>✏️</span> ปิด Editor';
+    } else {
+        // ปิด Editor
+        editorPanel.classList.add('hidden');
+        editorToggleBtn.classList.add('closed');
+        editorToggleBtn.innerHTML = '<span>✏️</span> เปิด Editor';
+    }
+});
+
+// Copy from original panel (plain text only - no formatting)
+if (copyFromOriginalBtn) {
+    copyFromOriginalBtn.addEventListener('click', () => {
+        if (!fullOCRResult) {
+            showError('ยังไม่มีข้อความต้นฉบับให้คัดลอก');
+            return;
+        }
+        
+        // Copy plain text only (no HTML/formatting)
+        editorContent.textContent = fullOCRResult;
+        
+        // Apply default styling
+        editorContent.style.fontSize = '26px';
+        editorContent.style.fontFamily = "'TH Sarabun New', 'TH SarabunIT๙', 'Sarabun', sans-serif";
+        editorContent.style.backgroundColor = '#ffffff';
+        fontSizeEditor.value = '26px';
+        
+        showSuccess('✅ คัดลอกต้นฉบับมา Editor แล้ว (ข้อความล้วน ไม่มีสีหรือกรอบ)');
+    });
+}
+
+// Editor formatting buttons
+boldBtn.addEventListener('click', () => {
+    document.execCommand('bold', false, null);
+    boldBtn.classList.toggle('active');
+});
+
+italicBtn.addEventListener('click', () => {
+    document.execCommand('italic', false, null);
+    italicBtn.classList.toggle('active');
+});
+
+underlineBtn.addEventListener('click', () => {
+    document.execCommand('underline', false, null);
+    underlineBtn.classList.toggle('active');
+});
+
+// Font size change
+fontSizeEditor.addEventListener('change', () => {
+    editorContent.style.fontSize = fontSizeEditor.value;
+});
+
+// Font family change
+fontFamilyEditor.addEventListener('change', () => {
+    editorContent.style.fontFamily = fontFamilyEditor.value;
+});
+
+// Text color change
+textColorPicker.addEventListener('change', () => {
+    document.execCommand('foreColor', false, textColorPicker.value);
+});
+
+// Background color change
+bgColorPicker.addEventListener('change', () => {
+    editorContent.style.backgroundColor = bgColorPicker.value;
+});
+
+// Copy edited content
+copyEditedBtn.addEventListener('click', async () => {
+    const editedText = editorContent.innerText;
+    
+    if (!editedText || editedText.trim().length === 0) {
+        showError('ไม่มีข้อความที่แก้ไขให้คัดลอก');
+        return;
+    }
+    
+    try {
+        await navigator.clipboard.writeText(editedText);
+        showSuccess(`📋 คัดลอกข้อความที่แก้ไขแล้วสำเร็จ! (${editedText.length} ตัวอักษร)`);
+    } catch (error) {
+        const temp = document.createElement('textarea');
+        temp.value = editedText;
+        document.body.appendChild(temp);
+        temp.select();
+        document.execCommand('copy');
+        document.body.removeChild(temp);
+        showSuccess(`📋 คัดลอกข้อความที่แก้ไขแล้วสำเร็จ! (${editedText.length} ตัวอักษร)`);
+    }
+});
+
+// Reset editor content
+resetEditorBtn.addEventListener('click', () => {
+    if (confirm('คุณต้องการรีเซ็ต Editor เป็นหน้าว่างใช่หรือไม่?')) {
+        editorContent.textContent = '👈 คัดลอกข้อความจากฝั่งซ้าย แล้วมาแก้ไขที่นี่...';
+        editorContent.style.fontSize = '26px';
+        editorContent.style.fontFamily = "'TH Sarabun New', 'TH SarabunIT๙', 'Sarabun', sans-serif";
+        editorContent.style.backgroundColor = '#ffffff';
+        fontSizeEditor.value = '26px';
+        showSuccess('↺ รีเซ็ต Editor เรียบร้อย!');
+    }
+});
+
 // ============================================
 // DISPLAY & SEARCH
 // ============================================
@@ -1106,32 +1248,6 @@ if (qaToggleBtn) {
 }
 
 // ============================================
-// FORMAT CONTROLS
-// ============================================
-
-formatToggleBtn.addEventListener('click', () => {
-    formatToolbar.classList.toggle('active');
-});
-
-applyFormatBtn.addEventListener('click', () => {
-    const fontSize = fontSizeSelect.value;
-    const lineHeight = lineHeightSelect.value;
-    const fontFamily = fontFamilySelect.value;
-    
-    resultDisplay.style.fontSize = fontSize;
-    resultDisplay.style.lineHeight = lineHeight;
-    resultDisplay.style.fontFamily = fontFamily;
-    
-    showSuccess('✅ ใช้รูปแบบใหม่แล้ว');
-});
-
-window.addEventListener('DOMContentLoaded', () => {
-    resultDisplay.style.fontSize = '26px';
-    resultDisplay.style.lineHeight = '1.8';
-    resultDisplay.style.fontFamily = "'TH SarabunIT๙', 'Sarabun', 'TH Sarabun New', sans-serif";
-});
-
-// ============================================
 // EXPORT FUNCTIONS
 // ============================================
 
@@ -1155,84 +1271,69 @@ copyBtn.addEventListener('click', async () => {
     }
 });
 
-// Copy selected text
-if (copySelectedBtn) {
-    copySelectedBtn.addEventListener('click', async () => {
-        const selectedText = window.getSelection().toString();
-        
-        if (!selectedText || selectedText.trim().length === 0) {
-            showError('กรุณาเลือกข้อความที่ต้องการคัดลอกก่อน (ลากเมาส์เลือกข้อความ)');
-            return;
-        }
-        
-        try {
-            await navigator.clipboard.writeText(selectedText);
-            showSuccess(`✂️ คัดลอกส่วนที่เลือกสำเร็จ! (${selectedText.length} ตัวอักษร)`);
-        } catch (error) {
-            const temp = document.createElement('textarea');
-            temp.value = selectedText;
-            document.body.appendChild(temp);
-            temp.select();
-            document.execCommand('copy');
-            document.body.removeChild(temp);
-            showSuccess(`✂️ คัดลอกส่วนที่เลือกสำเร็จ! (${selectedText.length} ตัวอักษร)`);
-        }
-    });
-}
-
-// Show/hide copy selected button based on text selection
-if (resultDisplay) {
-    document.addEventListener('selectionchange', () => {
-        if (resultSection.classList.contains('active')) {
-            const selection = window.getSelection();
-            const selectedText = selection.toString();
-            
-            if (selectedText && selectedText.trim().length > 0) {
-                copySelectedBtn.style.display = 'flex';
-            } else {
-                copySelectedBtn.style.display = 'none';
-            }
-        }
-    });
-}
-
 downloadTxtBtn.addEventListener('click', () => {
-    if (!fullOCRResult) {
+    const useEditor = editorMode && editorContent.innerText.trim() && 
+                      editorContent.innerText.trim() !== '👈 คัดลอกข้อความจากฝั่งซ้าย แล้วมาแก้ไขที่นี่...';
+    
+    const textToDownload = useEditor ? editorContent.innerText : fullOCRResult;
+    
+    if (!textToDownload) {
         showError('ไม่มีข้อความให้ดาวน์โหลด');
         return;
     }
     
-    const blob = new Blob([fullOCRResult], { type: 'text/plain;charset=utf-8' });
+    const blob = new Blob([textToDownload], { type: 'text/plain;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `${currentFileName || 'ocr-result'}.txt`;
+    a.download = `${currentFileName || 'ocr-result'}${useEditor ? '-edited' : ''}.txt`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
     
-    showSuccess('📝 ดาวน์โหลด TXT สำเร็จ!');
+    showSuccess(`📝 ดาวน์โหลด TXT สำเร็จ!${useEditor ? ' (ฉบับแก้ไข)' : ''}`);
 });
 
 downloadWordBtn.addEventListener('click', () => {
-    if (!fullOCRResult) {
-        showError('ไม่มีข้อความให้ดาวน์โหลด');
-        return;
+    const useEditor = editorMode && editorContent.innerHTML.trim() && 
+                      editorContent.innerText.trim() !== '👈 คัดลอกข้อความจากฝั่งซ้าย แล้วมาแก้ไขที่นี่...';
+    
+    let htmlContent = '';
+    
+    if (useEditor) {
+        // Use editor content with formatting
+        htmlContent = editorContent.innerHTML;
+    } else {
+        // Use original OCR result
+        if (!fullOCRResult) {
+            showError('ไม่มีข้อความให้ดาวน์โหลด');
+            return;
+        }
+        htmlContent = fullOCRResult.split('\n').map(line => `<p>${line || '&nbsp;'}</p>`).join('');
     }
+    
+    const fontSize = fontSizeEditor.value || '26px';
+    const fontFamily = fontFamilyEditor.value || "'TH Sarabun New', 'TH SarabunIT๙', 'Sarabun', sans-serif";
     
     const header = `<!DOCTYPE html>
 <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
-<head><meta charset='utf-8'><title>OCR Result</title></head><body>`;
+<head>
+<meta charset='utf-8'>
+<title>OCR Result</title>
+<style>
+body {
+    font-family: ${fontFamily};
+    font-size: ${fontSize};
+    line-height: 1.8;
+}
+</style>
+</head>
+<body>`;
     
     const footer = '</body></html>';
     
-    const content = fullOCRResult
-        .split('\n')
-        .map(line => `<p>${line || '&nbsp;'}</p>`)
-        .join('');
-    
-    const html = header + content + footer;
+    const html = header + htmlContent + footer;
     
     const blob = new Blob(['\ufeff', html], {
         type: 'application/msword'
@@ -1241,14 +1342,43 @@ downloadWordBtn.addEventListener('click', () => {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `${currentFileName || 'ocr-result'}.doc`;
+    a.download = `${currentFileName || 'ocr-result'}${useEditor ? '-edited' : ''}.doc`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
     
-    showSuccess('📘 ดาวน์โหลด Word สำเร็จ!');
+    showSuccess(`📘 ดาวน์โหลด Word สำเร็จ!${useEditor ? ' (ฉบับแก้ไข พร้อมฟอนต์ TH Sarabun New)' : ''}`);
 });
+
+// ============================================
+// OCR MORE PAGES (Keep Editor Content)
+// ============================================
+
+if (ocrMoreBtn) {
+    ocrMoreBtn.addEventListener('click', () => {
+        if (!selectedFile || !pdfDocument) {
+            showError('ไม่มีไฟล์ให้ประมวลผล กรุณาเริ่มต้นใหม่');
+            return;
+        }
+        
+        console.log('📄+ กำลังเตรียม OCR หน้าเพิ่มเติม...');
+        
+        // Save current editor content temporarily
+        const currentEditorContent = editorContent.innerHTML;
+        const currentEditorText = editorContent.innerText;
+        
+        // Store in sessionStorage for recovery
+        sessionStorage.setItem('editorBackup', currentEditorContent);
+        sessionStorage.setItem('editorTextBackup', currentEditorText);
+        
+        // Hide result section, show page selector
+        resultSection.classList.remove('active');
+        pageSelectorSection.classList.add('active');
+        
+        showSuccess('💡 Editor ของคุณถูกบันทึกไว้แล้ว - เลือกหน้าที่ต้องการ OCR เพิ่มเติม');
+    });
+}
 
 // ============================================
 // REPROCESS BUTTON
@@ -1267,6 +1397,9 @@ if (reprocessBtn) {
         // Hide result, show page selector
         resultSection.classList.remove('active');
         pageSelectorSection.classList.add('active');
+        
+        // DON'T reset editor - keep it open with existing content
+        // User can continue editing while processing new pages
     });
 }
 
@@ -1288,15 +1421,30 @@ function resetToUpload() {
     currentMatchIndex = -1;
     currentFileName = '';
     qaMode = false;
+    editorMode = true; // Keep editor mode true
     fileInput.value = '';
     fileName.textContent = '';
     fileSize.textContent = '';
     resultDisplay.innerHTML = '';
+    editorContent.textContent = '👈 คัดลอกข้อความจากฝั่งซ้าย แล้วมาแก้ไขที่นี่...';
+    editorContent.style.fontSize = '26px';
+    editorContent.style.fontFamily = "'TH Sarabun New', 'TH SarabunIT๙', 'Sarabun', sans-serif";
+    editorContent.style.backgroundColor = '#ffffff';
+    fontSizeEditor.value = '26px';
     searchText.value = '';
     selectedPages.clear();
     visualPagesContainer.innerHTML = '';
     
+    // Clear sessionStorage backup
+    sessionStorage.removeItem('editorBackup');
+    sessionStorage.removeItem('editorTextBackup');
+    
     stopTimer();
+    
+    // Reset editor to open state
+    editorPanel.classList.remove('hidden');
+    editorToggleBtn.classList.remove('closed');
+    editorToggleBtn.innerHTML = '<span>✏️</span> ปิด Editor';
     
     const qaToggleBtn = document.getElementById('qaToggleBtn');
     if (qaToggleBtn) {
@@ -1308,16 +1456,11 @@ function resetToUpload() {
         metadataSection.style.display = 'none';
     }
     
-    if (copySelectedBtn) {
-        copySelectedBtn.style.display = 'none';
-    }
-    
     uploadSection.style.display = 'block';
     pageSelectorSection.classList.remove('active');
     progressSection.classList.remove('active');
     previewSection.classList.remove('active');
     resultSection.classList.remove('active');
-    formatToolbar.classList.remove('active');
     visualPageGrid.style.display = 'none';
     
     updateSearchCounter();
