@@ -1032,14 +1032,21 @@ underlineBtn.addEventListener('click', () => {
     underlineBtn.classList.toggle('active');
 });
 
-// Font size change
+// Font size change (apply to entire editor content)
 fontSizeEditor.addEventListener('change', () => {
     editorContent.style.fontSize = fontSizeEditor.value;
+    
+    // Show confirmation
+    showSuccess(`📏 เปลี่ยนขนาดตัวอักษรเป็น ${fontSizeEditor.value} แล้ว`);
 });
 
-// Font family change
+// Font family change (apply to entire editor content)
 fontFamilyEditor.addEventListener('change', () => {
     editorContent.style.fontFamily = fontFamilyEditor.value;
+    
+    // Show confirmation
+    const fontName = fontFamilyEditor.options[fontFamilyEditor.selectedIndex].text;
+    showSuccess(`🔤 เปลี่ยนฟอนต์เป็น ${fontName} แล้ว`);
 });
 
 // Text color change
@@ -1313,8 +1320,24 @@ downloadWordBtn.addEventListener('click', () => {
         htmlContent = fullOCRResult.split('\n').map(line => `<p>${line || '&nbsp;'}</p>`).join('');
     }
     
-    const fontSize = fontSizeEditor.value || '26px';
-    const fontFamily = fontFamilyEditor.value || "'TH Sarabun New', 'TH SarabunIT๙', 'Sarabun', sans-serif";
+    // Get actual font size and family from editor (computed style)
+    let fontSize = '26px';
+    let fontFamily = "'TH Sarabun New', 'TH SarabunIT๙', 'Sarabun', sans-serif";
+    
+    if (useEditor) {
+        // Get computed style from editor content
+        const computedStyle = window.getComputedStyle(editorContent);
+        fontSize = computedStyle.fontSize || fontSizeEditor.value || '26px';
+        fontFamily = computedStyle.fontFamily || fontFamilyEditor.value || "'TH Sarabun New', 'TH SarabunIT๙', 'Sarabun', sans-serif";
+        
+        // Also try to get from dropdown if available
+        if (fontSizeEditor.value) {
+            fontSize = fontSizeEditor.value;
+        }
+        if (fontFamilyEditor.value) {
+            fontFamily = fontFamilyEditor.value;
+        }
+    }
     
     const header = `<!DOCTYPE html>
 <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
@@ -1326,6 +1349,16 @@ body {
     font-family: ${fontFamily};
     font-size: ${fontSize};
     line-height: 1.8;
+}
+p {
+    font-family: ${fontFamily};
+    font-size: ${fontSize};
+    line-height: 1.8;
+    margin: 0.5em 0;
+}
+div {
+    font-family: ${fontFamily};
+    font-size: ${fontSize};
 }
 </style>
 </head>
@@ -1348,7 +1381,7 @@ body {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
     
-    showSuccess(`📘 ดาวน์โหลด Word สำเร็จ!${useEditor ? ' (ฉบับแก้ไข พร้อมฟอนต์ TH Sarabun New)' : ''}`);
+    showSuccess(`📘 ดาวน์โหลด Word สำเร็จ! (${fontSize} TH Sarabun New${useEditor ? ' - ฉบับแก้ไข' : ''})`);
 });
 
 // ============================================
