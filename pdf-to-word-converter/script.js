@@ -1,7 +1,7 @@
 // ============================================
 // CONFIGURATION
 // ============================================
-const MISTRAL_API_KEY = 'AeXpjWlp279zSchqP7weMw4nXwNyBrCx';
+const MISTRAL_API_KEY = 'j4YnbG4rhxOFMMjyfpXBAPU1iUKxmsa8';
 
 // DOM Elements
 const fileInput = document.getElementById('fileInput');
