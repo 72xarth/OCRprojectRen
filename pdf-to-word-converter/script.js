@@ -6,9 +6,10 @@ const MISTRAL_API_KEY = 'j4YnbG4rhxOFMMjyfpXBAPU1iUKxmsa8';
 // DOM Elements
 const fileInput = document.getElementById('fileInput');
 const uploadSection = document.getElementById('uploadSection');
+const pageSelectorSection = document.getElementById('pageSelectorSection');
+const progressSection = document.getElementById('progressSection');
 const previewSection = document.getElementById('previewSection');
 const processBtn = document.getElementById('processBtn');
-const loadingSection = document.getElementById('loadingSection');
 const resultSection = document.getElementById('resultSection');
 const resultDisplay = document.getElementById('resultDisplay');
 const searchText = document.getElementById('searchText');
@@ -32,6 +33,35 @@ const successMessage = document.getElementById('successMessage');
 const fileName = document.getElementById('fileName');
 const fileSize = document.getElementById('fileSize');
 
+// Page Selector Elements
+const pageCountBadge = document.getElementById('pageCountBadge');
+const totalPagesAll = document.getElementById('totalPagesAll');
+const startPageInput = document.getElementById('startPage');
+const endPageInput = document.getElementById('endPage');
+const specificPagesInput = document.getElementById('specificPages');
+const confirmPageSelection = document.getElementById('confirmPageSelection');
+const cancelPageSelection = document.getElementById('cancelPageSelection');
+
+// Visual Page Selector Elements
+const visualPageGrid = document.getElementById('visualPageGrid');
+const visualPagesContainer = document.getElementById('visualPagesContainer');
+const selectedPagesCount = document.getElementById('selectedPagesCount');
+const selectAllPagesBtn = document.getElementById('selectAllPages');
+const deselectAllPagesBtn = document.getElementById('deselectAllPages');
+let selectedPages = new Set();
+
+// Copy Selected Button
+const copySelectedBtn = document.getElementById('copySelectedBtn');
+
+// Progress Elements
+const progressBar = document.getElementById('progressBar');
+const progressText = document.getElementById('progressText');
+const currentPageNum = document.getElementById('currentPageNum');
+const successCount = document.getElementById('successCount');
+const errorCount = document.getElementById('errorCount');
+const elapsedTime = document.getElementById('elapsedTime');
+const pageResultStatus = document.getElementById('pageResultStatus');
+
 // Metadata Elements
 const metadataSection = document.getElementById('metadataSection');
 const metadataDisplay = document.getElementById('metadataDisplay');
@@ -39,12 +69,16 @@ const copyMetadataBtn = document.getElementById('copyMetadataBtn');
 
 // Global Variables
 let selectedFile = null;
+let pdfDocument = null;
+let totalPages = 0;
 let fullOCRResult = null;
 let documentMetadata = null;
 let searchMatches = [];
 let currentMatchIndex = -1;
 let currentFileName = '';
-let qaMode = false; // Q&A highlighting mode
+let qaMode = false;
+let processingStartTime = null;
+let timerInterval = null;
 
 // Arabic to Thai number conversion
 function convertToThaiNumbers(text) {
@@ -99,78 +133,454 @@ async function handleFileSelect(file) {
     selectedFile = file;
     currentFileName = file.name.replace('.pdf', '');
     
-    fileName.textContent = `📄 ${file.name}`;
-    fileSize.textContent = `ขนาด: ${(file.size / 1024 / 1024).toFixed(2)} MB`;
-    
-    previewSection.classList.add('active');
-    hideError();
+    // Load PDF to get page count
+    try {
+        const arrayBuffer = await file.arrayBuffer();
+        pdfDocument = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+        totalPages = pdfDocument.numPages;
+        
+        console.log(`📄 พบ ${totalPages} หน้า`);
+        
+        // Update UI
+        pageCountBadge.textContent = `${totalPages} หน้า`;
+        totalPagesAll.textContent = totalPages;
+        startPageInput.max = totalPages;
+        endPageInput.max = totalPages;
+        endPageInput.value = totalPages;
+        
+        // Show page selector
+        uploadSection.style.display = 'none';
+        pageSelectorSection.classList.add('active');
+        
+        // Generate visual page grid
+        generateVisualPageGrid(totalPages);
+        
+        hideError();
+        
+    } catch (error) {
+        showError('ไม่สามารถอ่านไฟล์ PDF ได้: ' + error.message);
+        console.error('PDF Load Error:', error);
+    }
 }
 
-// ============================================
-// OCR PROCESSING
-// ============================================
-
-processBtn.addEventListener('click', async () => {
-    await processOCR();
-});
-
-// Add re-process button handler
-const reprocessBtn = document.getElementById('reprocessBtn');
-if (reprocessBtn) {
-    reprocessBtn.addEventListener('click', async () => {
-        if (!selectedFile) {
-            showError('ไม่มีไฟล์ให้ประมวลผลใหม่');
-            return;
-        }
+// Generate visual page selection grid
+function generateVisualPageGrid(total) {
+    visualPagesContainer.innerHTML = '';
+    selectedPages.clear();
+    
+    for (let i = 1; i <= total; i++) {
+        const pageItem = document.createElement('div');
+        pageItem.className = 'visual-page-item';
+        pageItem.dataset.page = i;
         
-        console.log('🔄 กำลังประมวลผลใหม่...');
-        await processOCR();
+        pageItem.innerHTML = `
+            <div class="visual-page-number">${convertToThaiNumbers(String(i))}</div>
+            <div class="visual-page-label">หน้า</div>
+        `;
+        
+        pageItem.addEventListener('click', () => {
+            togglePageSelection(i, pageItem);
+        });
+        
+        visualPagesContainer.appendChild(pageItem);
+    }
+    
+    updateSelectedCount();
+}
+
+// Toggle page selection
+function togglePageSelection(pageNum, element) {
+    if (selectedPages.has(pageNum)) {
+        selectedPages.delete(pageNum);
+        element.classList.remove('selected');
+    } else {
+        selectedPages.add(pageNum);
+        element.classList.add('selected');
+    }
+    updateSelectedCount();
+}
+
+// Update selected pages count
+function updateSelectedCount() {
+    selectedPagesCount.textContent = `เลือกแล้ว ${selectedPages.size} หน้า`;
+}
+
+// Select all pages
+if (selectAllPagesBtn) {
+    selectAllPagesBtn.addEventListener('click', () => {
+        selectedPages.clear();
+        for (let i = 1; i <= totalPages; i++) {
+            selectedPages.add(i);
+        }
+        document.querySelectorAll('.visual-page-item').forEach(item => {
+            item.classList.add('selected');
+        });
+        updateSelectedCount();
     });
 }
 
-async function processOCR() {
+// Deselect all pages
+if (deselectAllPagesBtn) {
+    deselectAllPagesBtn.addEventListener('click', () => {
+        selectedPages.clear();
+        document.querySelectorAll('.visual-page-item').forEach(item => {
+            item.classList.remove('selected');
+        });
+        updateSelectedCount();
+    });
+}
+
+// ============================================
+// PAGE SELECTOR
+// ============================================
+
+// Handle page option selection
+document.querySelectorAll('.page-option').forEach(option => {
+    option.addEventListener('click', (e) => {
+        if (e.target.tagName !== 'INPUT' && e.target.type !== 'number' && e.target.type !== 'text') {
+            const radio = option.querySelector('input[type="radio"]');
+            radio.checked = true;
+            updateSelectedOption();
+        }
+    });
+});
+
+document.querySelectorAll('input[name="pageMode"]').forEach(radio => {
+    radio.addEventListener('change', updateSelectedOption);
+});
+
+function updateSelectedOption() {
+    document.querySelectorAll('.page-option').forEach(opt => opt.classList.remove('selected'));
+    const selected = document.querySelector('input[name="pageMode"]:checked');
+    if (selected) {
+        selected.closest('.page-option').classList.add('selected');
+        
+        // Show/hide visual grid based on selection
+        if (selected.value === 'visual') {
+            visualPageGrid.style.display = 'block';
+        } else {
+            visualPageGrid.style.display = 'none';
+        }
+    }
+}
+
+// Initialize selection
+updateSelectedOption();
+
+// Confirm page selection
+confirmPageSelection.addEventListener('click', async () => {
+    const selectedMode = document.querySelector('input[name="pageMode"]:checked').value;
+    let pagesToProcess = [];
+    
+    try {
+        if (selectedMode === 'all') {
+            // All pages
+            pagesToProcess = Array.from({ length: totalPages }, (_, i) => i + 1);
+            
+        } else if (selectedMode === 'range') {
+            // Range
+            const start = parseInt(startPageInput.value);
+            const end = parseInt(endPageInput.value);
+            
+            if (start < 1 || start > totalPages || end < 1 || end > totalPages) {
+                showError(`หน้าต้องอยู่ระหว่าง 1-${totalPages}`);
+                return;
+            }
+            
+            if (start > end) {
+                showError('หน้าเริ่มต้นต้องน้อยกว่าหรือเท่ากับหน้าสุดท้าย');
+                return;
+            }
+            
+            pagesToProcess = Array.from({ length: end - start + 1 }, (_, i) => start + i);
+            
+        } else if (selectedMode === 'specific') {
+            // Specific pages
+            const input = specificPagesInput.value.trim();
+            
+            if (!input) {
+                showError('กรุณาระบุหน้าที่ต้องการ');
+                return;
+            }
+            
+            pagesToProcess = parsePageInput(input, totalPages);
+            
+            if (pagesToProcess.length === 0) {
+                showError('รูปแบบการระบุหน้าไม่ถูกต้อง');
+                return;
+            }
+            
+        } else if (selectedMode === 'visual') {
+            // Visual selection
+            if (selectedPages.size === 0) {
+                showError('กรุณาคลิกเลือกหน้าที่ต้องการอย่างน้อย 1 หน้า');
+                return;
+            }
+            
+            pagesToProcess = Array.from(selectedPages).sort((a, b) => a - b);
+        }
+        
+        console.log('📑 หน้าที่จะประมวลผล:', pagesToProcess);
+        
+        // Start processing
+        await processSelectedPages(pagesToProcess);
+        
+    } catch (error) {
+        showError('เกิดข้อผิดพลาด: ' + error.message);
+        console.error('Page Selection Error:', error);
+    }
+});
+
+// Cancel selection
+cancelPageSelection.addEventListener('click', () => {
+    resetToUpload();
+});
+
+// Parse page input (e.g., "1,3,5-7,10")
+function parsePageInput(input, maxPage) {
+    const pages = new Set();
+    const parts = input.split(',');
+    
+    for (let part of parts) {
+        part = part.trim();
+        
+        if (part.includes('-')) {
+            // Range (e.g., "5-7")
+            const [start, end] = part.split('-').map(s => parseInt(s.trim()));
+            
+            if (isNaN(start) || isNaN(end) || start < 1 || end > maxPage || start > end) {
+                return [];
+            }
+            
+            for (let i = start; i <= end; i++) {
+                pages.add(i);
+            }
+        } else {
+            // Single page
+            const page = parseInt(part);
+            
+            if (isNaN(page) || page < 1 || page > maxPage) {
+                return [];
+            }
+            
+            pages.add(page);
+        }
+    }
+    
+    return Array.from(pages).sort((a, b) => a - b);
+}
+
+// ============================================
+// PAGE-BY-PAGE OCR PROCESSING
+// ============================================
+
+async function processSelectedPages(pages) {
     if (!MISTRAL_API_KEY) {
         showError('กรุณาใส่ Mistral API Key ในไฟล์ script.js ก่อนใช้งาน');
         return;
     }
     
-    if (!selectedFile) {
-        showError('กรุณาเลือกไฟล์ PDF ก่อน');
-        return;
-    }
+    // Hide page selector, show progress
+    pageSelectorSection.classList.remove('active');
+    progressSection.classList.add('active');
     
-    loadingSection.classList.add('active');
-    previewSection.classList.remove('active');
-    resultSection.classList.remove('active');
-    hideError();
+    // Reset progress
+    progressBar.style.width = '0%';
+    currentPageNum.textContent = '-';
+    successCount.textContent = '0';
+    errorCount.textContent = '0';
+    pageResultStatus.innerHTML = '';
+    
+    // Start timer
+    processingStartTime = Date.now();
+    startTimer();
+    
+    const results = [];
+    let successfulPages = 0;
+    let failedPages = 0;
     
     try {
-        console.log('กำลังอัปโหลดไฟล์...');
-        const fileId = await uploadFile(selectedFile);
-        console.log('อัปโหลดสำเร็จ! File ID:', fileId);
+        for (let i = 0; i < pages.length; i++) {
+            const pageNum = pages[i];
+            const progress = ((i + 1) / pages.length * 100).toFixed(0);
+            
+            // Update progress UI
+            progressBar.style.width = progress + '%';
+            progressText.textContent = `กำลังประมวลผลหน้า ${convertToThaiNumbers(String(pageNum))} (${i + 1}/${pages.length}) - ${progress}%`;
+            currentPageNum.textContent = convertToThaiNumbers(String(pageNum));
+            
+            // Add status item
+            addPageStatus(pageNum, 'processing');
+            
+            try {
+                console.log(`🔄 กำลังประมวลผลหน้า ${pageNum}...`);
+                
+                // Extract single page as PDF
+                const singlePagePDF = await extractSinglePagePDF(pageNum);
+                
+                // Upload and OCR
+                const fileId = await uploadFile(singlePagePDF);
+                const pageText = await performPDFOCR(fileId);
+                
+                results.push({
+                    page: pageNum,
+                    text: pageText,
+                    success: true
+                });
+                
+                successfulPages++;
+                successCount.textContent = successfulPages;
+                
+                updatePageStatus(pageNum, 'success', `${pageText.length} ตัวอักษร`);
+                console.log(`✅ หน้า ${pageNum} สำเร็จ (${pageText.length} ตัวอักษร)`);
+                
+            } catch (error) {
+                console.error(`❌ หน้า ${pageNum} ล้มเหลว:`, error);
+                
+                results.push({
+                    page: pageNum,
+                    text: '',
+                    success: false,
+                    error: error.message
+                });
+                
+                failedPages++;
+                errorCount.textContent = failedPages;
+                
+                updatePageStatus(pageNum, 'error', error.message);
+            }
+            
+            // Small delay between pages
+            if (i < pages.length - 1) {
+                await new Promise(r => setTimeout(r, 500));
+            }
+        }
         
-        console.log('กำลังประมวลผล OCR...');
-        const result = await performPDFOCR(fileId);
+        // Stop timer
+        stopTimer();
         
-        fullOCRResult = result;
+        // Combine all successful results
+        fullOCRResult = results
+            .filter(r => r.success)
+            .map((r, index) => {
+                const separator = index > 0 ? '\n\n' + '─'.repeat(50) + '\n' + `หน้า ${convertToThaiNumbers(String(r.page))}\n` + '─'.repeat(50) + '\n\n' : '';
+                return separator + r.text;
+            })
+            .join('');
         
-        // Extract metadata from first page (using Regex - no API call)
+        if (!fullOCRResult || fullOCRResult.trim().length === 0) {
+            throw new Error('ไม่พบข้อความในหน้าที่เลือก');
+        }
+        
+        // Extract metadata from first page
         console.log('กำลังดึงข้อมูลเกริ่นนำ...');
         await extractMetadata();
         
+        // Show results
         displayResult();
         
+        progressSection.classList.remove('active');
         resultSection.classList.add('active');
-        loadingSection.classList.remove('active');
-        showSuccess(`✅ แปลงข้อความสำเร็จ! ${result.length} ตัวอักษร`);
+        
+        const totalChars = fullOCRResult.length;
+        showSuccess(`✅ แปลงสำเร็จ ${successfulPages} หน้า (${totalChars.toLocaleString()} ตัวอักษร) ${failedPages > 0 ? `| ล้มเหลว ${failedPages} หน้า` : ''}`);
         
     } catch (error) {
-        loadingSection.classList.remove('active');
-        previewSection.classList.add('active');
+        stopTimer();
+        progressSection.classList.remove('active');
+        pageSelectorSection.classList.add('active');
         showError(`เกิดข้อผิดพลาด: ${error.message}`);
-        console.error('OCR Error:', error);
+        console.error('Processing Error:', error);
     }
 }
+
+// Extract single page from PDF
+async function extractSinglePagePDF(pageNum) {
+    const page = await pdfDocument.getPage(pageNum);
+    
+    // Render page to canvas
+    const scale = 2.0;
+    const viewport = page.getViewport({ scale });
+    
+    const canvas = document.createElement('canvas');
+    const context = canvas.getContext('2d');
+    canvas.height = viewport.height;
+    canvas.width = viewport.width;
+    
+    await page.render({
+        canvasContext: context,
+        viewport: viewport
+    }).promise;
+    
+    // Convert canvas to blob
+    return new Promise((resolve, reject) => {
+        canvas.toBlob((blob) => {
+            if (blob) {
+                // Convert to File
+                const file = new File([blob], `page-${pageNum}.png`, { type: 'image/png' });
+                resolve(file);
+            } else {
+                reject(new Error('ไม่สามารถแปลงหน้าเป็นรูปภาพได้'));
+            }
+        }, 'image/png', 0.95);
+    });
+}
+
+// Add page status
+function addPageStatus(pageNum, status) {
+    const statusItem = document.createElement('div');
+    statusItem.className = `page-status-item ${status}`;
+    statusItem.id = `status-page-${pageNum}`;
+    
+    let icon = '⏳';
+    let text = `กำลังประมวลผลหน้า ${convertToThaiNumbers(String(pageNum))}...`;
+    
+    statusItem.innerHTML = `<span>${icon}</span> <span>${text}</span>`;
+    pageResultStatus.appendChild(statusItem);
+    
+    // Auto scroll to bottom
+    pageResultStatus.scrollTop = pageResultStatus.scrollHeight;
+}
+
+// Update page status
+function updatePageStatus(pageNum, status, message) {
+    const statusItem = document.getElementById(`status-page-${pageNum}`);
+    if (!statusItem) return;
+    
+    statusItem.className = `page-status-item ${status}`;
+    
+    let icon = '✅';
+    let text = `หน้า ${convertToThaiNumbers(String(pageNum))}: ${message}`;
+    
+    if (status === 'error') {
+        icon = '❌';
+        text = `หน้า ${convertToThaiNumbers(String(pageNum))}: ล้มเหลว - ${message}`;
+    }
+    
+    statusItem.innerHTML = `<span>${icon}</span> <span>${text}</span>`;
+    
+    // Auto scroll
+    pageResultStatus.scrollTop = pageResultStatus.scrollHeight;
+}
+
+// Timer functions
+function startTimer() {
+    timerInterval = setInterval(() => {
+        const elapsed = Math.floor((Date.now() - processingStartTime) / 1000);
+        elapsedTime.textContent = `${elapsed} วินาที`;
+    }, 1000);
+}
+
+function stopTimer() {
+    if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+    }
+}
+
+// ============================================
+// OCR API FUNCTIONS
+// ============================================
 
 async function uploadFile(file) {
     const apiUrl = 'https://api.mistral.ai/v1/files';
@@ -196,7 +606,7 @@ async function uploadFile(file) {
             if (errorData.message) errorMessage = errorData.message;
         } catch (e) {}
         
-        throw new Error(`การอัปโหลดไฟล์ล้มเหลว: ${errorMessage}`);
+        throw new Error(`การอัปโหลดล้มเหลว: ${errorMessage}`);
     }
     
     const data = await response.json();
@@ -236,51 +646,27 @@ async function performPDFOCR(fileId) {
     }
     
     const data = await response.json();
-    console.log('📄 OCR Response:', data);
-    console.log('📊 Total pages returned by API:', data.pages ? data.pages.length : 'unknown');
     
     let fullText = '';
-    let pageCount = 0;
     
     if (data.pages && Array.isArray(data.pages)) {
-        console.log('🔍 Processing pages...');
-        
-        data.pages.forEach((page, index) => {
+        data.pages.forEach((page) => {
             const pageText = page.markdown || page.text || page.content || '';
-            
             if (pageText && pageText.trim()) {
-                pageCount++;
-                console.log(`✓ Page ${index + 1}: ${pageText.length} characters`);
-                
-                // Add page separator for clarity
-                if (fullText.length > 0) {
-                    fullText += '\n\n' + '─'.repeat(50) + '\n';
-                    fullText += `หน้า ${convertToThaiNumbers(String(index + 1))}\n`;
-                    fullText += '─'.repeat(50) + '\n\n';
-                }
-                
-                fullText += pageText;
-            } else {
-                console.warn(`⚠ Page ${index + 1}: No content found`);
+                fullText += pageText + '\n';
             }
         });
-        
-        console.log(`✅ Successfully processed ${pageCount}/${data.pages.length} pages`);
     } else {
-        // Fallback for single text response
-        const text = data.markdown || data.text || data.content || '';
-        fullText = text;
-        console.log('📝 Single text response:', text.length, 'characters');
+        fullText = data.markdown || data.text || data.content || '';
     }
     
     if (!fullText.trim()) {
-        throw new Error('ไม่พบข้อความในเอกสาร - OCR อาจล้มเหลว');
+        throw new Error('ไม่พบข้อความ');
     }
     
-    // Convert all Arabic numbers to Thai numbers
+    // Convert to Thai numbers
     fullText = convertToThaiNumbers(fullText);
     
-    console.log(`🎉 OCR Complete: ${fullText.length} total characters`);
     return fullText.trim();
 }
 
@@ -294,7 +680,6 @@ async function extractMetadata() {
         return;
     }
     
-    // Get first 1000 characters for metadata extraction
     const firstPage = fullOCRResult.substring(0, 1000);
     
     try {
@@ -302,8 +687,7 @@ async function extractMetadata() {
         
         const metadata = {};
         
-        // Extract name (Thai name patterns)
-        // Patterns: นาง/นางสาว/นาย + ชื่อ + นามสกุล
+        // Extract name
         const namePatterns = [
             /((?:นาง|นางสาว|นาย|ดร\.|ศ\.|พล\.|ร\.ต\.|ร\.อ\.|ร\.ท\.)\s*[\u0E00-\u0E7F]+(?:\s+[\u0E00-\u0E7F]+)?)/,
             /([\u0E00-\u0E7F]{2,}\s+[\u0E00-\u0E7F]{2,})/
@@ -317,13 +701,13 @@ async function extractMetadata() {
             }
         }
         
-        // Extract action (ให้ถ้อยคำ, รายงาน, เบิกความ, etc.)
+        // Extract action
         const actionMatch = firstPage.match(/(ให้ถ้อยคำ|รายงาน|เบิกความ|ให้การ|แถลงการณ์)/i);
         if (actionMatch) {
             metadata.action = actionMatch[1];
         }
         
-        // Extract receiver/organization
+        // Extract receiver
         const receiverPatterns = [
             /(คณะกรรมการ[^\n\r]{0,50})/,
             /(ป\.ป\.ช[\.\s]*[^\n\r]{0,30})/,
@@ -339,17 +723,12 @@ async function extractMetadata() {
             }
         }
         
-        // Extract Thai date (e.g., ๒๐ พฤษภา ๒๕๖๕ or 20 พฤษภา 2565)
+        // Extract date
         const datePatterns = [
-            // Thai numerals with full month name
             /([๐-๙]{1,2}\s*(?:มกราคม|ม\.ค\.|กุมภาพันธ์|ก\.พ\.|มีนาคม|มี\.ค\.|เมษายน|เม\.ย\.|พฤษภา|พ\.ค\.|มิถุนายน|มิ\.ย\.|กรกฎาคม|ก\.ค\.|สิงหาคม|ส\.ค\.|กันยายน|ก\.ย\.|ตุลาคม|ต\.ค\.|พฤศจิกายน|พ\.ย\.|ธันวาคม|ธ\.ค\.)\s*[๐-๙]{4})/,
-            // Arabic numerals with full month name
             /([0-9]{1,2}\s*(?:มกราคม|ม\.ค\.|กุมภาพันธ์|ก\.พ\.|มีนาคม|มี\.ค\.|เมษายน|เม\.ย\.|พฤษภา|พ\.ค\.|มิถุนายน|มิ\.ย\.|กรกฎาคม|ก\.ค\.|สิงหาคม|ส\.ค\.|กันยายน|ก\.ย\.|ตุลาคม|ต\.ค\.|พฤศจิกายน|พ\.ย\.|ธันวาคม|ธ\.ค\.)\s*[0-9]{4})/,
-            // With "วันที่" prefix
             /(วันที่\s*[๐-๙0-9]{1,2}[\/\-\s]+[๐-๙0-9]{1,2}[\/\-\s]+[๐-๙0-9]{2,4})/,
-            // Date with "เมื่อวันที่"
             /(เมื่อวันที่\s*[๐-๙0-9]{1,2}\s*(?:มกราคม|กุมภาพันธ์|มีนาคม|เมษายน|พฤษภา|มิถุนายน|กรกฎาคม|สิงหาคม|กันยายน|ตุลาคม|พฤศจิกายน|ธันวาคม)\s*[๐-๙0-9]{4})/,
-            // Simple number format
             /([๐-๙0-9]{1,2}\/[๐-๙0-9]{1,2}\/[๐-๙0-9]{2,4})/,
             /([๐-๙0-9]{1,2}\-[๐-๙0-9]{1,2}\-[๐-๙0-9]{2,4})/
         ];
@@ -358,14 +737,13 @@ async function extractMetadata() {
             const dateMatch = firstPage.match(pattern);
             if (dateMatch && dateMatch[1]) {
                 let extractedDate = dateMatch[1].trim();
-                // Clean up prefixes
                 extractedDate = extractedDate.replace(/^(?:วันที่|เมื่อวันที่)\s*/, '');
                 metadata.date = extractedDate;
                 break;
             }
         }
         
-        // Extract document number (e.g., ๔๓๓๙-๕๓๓๕ or 4339-5335)
+        // Extract document number
         const docNumberPatterns = [
             /([๐-๙๑-๙]{3,}[\-\/][๐-๙๑-๙]{3,})/,
             /([0-9]{3,}[\-\/][0-9]{3,})/,
@@ -387,13 +765,12 @@ async function extractMetadata() {
             metadata.reference_number = refMatch[1].trim();
         }
         
-        // Extract title/subject
+        // Extract title
         const titleMatch = firstPage.match(/(เรื่อง\s+[^\n\r]{10,100})/);
         if (titleMatch && titleMatch[1]) {
             metadata.title = titleMatch[1].trim();
         }
         
-        // Check if we have any metadata
         const validKeys = Object.keys(metadata).filter(key => metadata[key]);
         
         if (validKeys.length > 0) {
@@ -414,7 +791,6 @@ async function extractMetadata() {
 function displayMetadata() {
     if (!documentMetadata || !metadataSection) return;
     
-    // Filter out null/empty values
     const validMetadata = Object.entries(documentMetadata)
         .filter(([key, value]) => value && value !== 'null');
     
@@ -423,7 +799,6 @@ function displayMetadata() {
         return;
     }
     
-    // Generate summary sentence
     const summarySentence = generateSummarySentence(documentMetadata);
     
     const labelMap = {
@@ -438,7 +813,6 @@ function displayMetadata() {
     
     let html = '';
     
-    // Add summary sentence at the top if available
     if (summarySentence) {
         html += `
             <div class="summary-sentence">
@@ -471,7 +845,6 @@ function generateSummarySentence(metadata) {
     
     const parts = [];
     
-    // Build sentence based on available data
     if (metadata.name) {
         parts.push(metadata.name);
     }
@@ -479,7 +852,7 @@ function generateSummarySentence(metadata) {
     if (metadata.action) {
         parts.push(metadata.action);
     } else {
-        parts.push('ให้ถ้อยคำ'); // default action
+        parts.push('ให้ถ้อยคำ');
     }
     
     if (metadata.receiver) {
@@ -499,7 +872,6 @@ function generateSummarySentence(metadata) {
     return parts.join(' ');
 }
 
-// Global function for copying summary
 window.copySummary = async function() {
     const summaryText = document.querySelector('.summary-text');
     if (!summaryText) return;
@@ -510,7 +882,6 @@ window.copySummary = async function() {
         await navigator.clipboard.writeText(text);
         showSuccess('📋 คัดลอกประโยคสรุปสำเร็จ!');
         
-        // Visual feedback
         summaryText.style.background = '#d1fae5';
         setTimeout(() => {
             summaryText.style.background = '#f0f9ff';
@@ -526,7 +897,6 @@ window.copySummary = async function() {
     }
 };
 
-// Copy metadata button
 if (copyMetadataBtn) {
     copyMetadataBtn.addEventListener('click', async () => {
         if (!documentMetadata) {
@@ -549,7 +919,6 @@ if (copyMetadataBtn) {
         
         let text = '';
         
-        // Add summary sentence first
         const summarySentence = generateSummarySentence(documentMetadata);
         if (summarySentence) {
             text += `📝 ประโยคสรุป:\n${summarySentence}\n\n`;
@@ -592,10 +961,8 @@ function displayResult() {
     let formattedHTML = '';
     
     if (qaMode) {
-        // Q&A Mode: Highlight questions and answers with different colors
         formattedHTML = formatQAText(fullOCRResult, searchQuery);
     } else {
-        // Normal Mode
         formattedHTML = formatText(fullOCRResult, searchQuery);
     }
     
@@ -620,19 +987,14 @@ function displayResult() {
 function formatQAText(text, searchQuery) {
     if (!text) return '';
     
-    // Escape HTML first
     let formatted = text
         .replace(/&/g, '&amp;')
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;');
     
-    // Highlight the word "ถาม" with yellow background
     formatted = formatted.replace(/(ถาม)/gi, '<span class="qa-question-highlight">$1</span>');
-    
-    // Highlight the word "ตอบ" with green background
     formatted = formatted.replace(/(ตอบ)/gi, '<span class="qa-answer-highlight">$1</span>');
     
-    // Apply search highlighting if needed (on top of Q&A highlighting)
     if (searchQuery) {
         const regex = new RegExp(`(${escapeRegex(searchQuery)})`, 'gi');
         formatted = formatted.replace(regex, '<mark>$1</mark>');
@@ -726,7 +1088,6 @@ clearSearchBtn.addEventListener('click', () => {
     displayResult();
 });
 
-// Q&A Mode Toggle
 const qaToggleBtn = document.getElementById('qaToggleBtn');
 if (qaToggleBtn) {
     qaToggleBtn.addEventListener('click', () => {
@@ -764,9 +1125,7 @@ applyFormatBtn.addEventListener('click', () => {
     showSuccess('✅ ใช้รูปแบบใหม่แล้ว');
 });
 
-// Set default format on page load
 window.addEventListener('DOMContentLoaded', () => {
-    // Set default values
     resultDisplay.style.fontSize = '26px';
     resultDisplay.style.lineHeight = '1.8';
     resultDisplay.style.fontFamily = "'TH SarabunIT๙', 'Sarabun', 'TH Sarabun New', sans-serif";
@@ -784,7 +1143,7 @@ copyBtn.addEventListener('click', async () => {
     
     try {
         await navigator.clipboard.writeText(fullOCRResult);
-        showSuccess('📋 คัดลอกสำเร็จ!');
+        showSuccess('📋 คัดลอกทั้งหมดสำเร็จ!');
     } catch (error) {
         const temp = document.createElement('textarea');
         temp.value = fullOCRResult;
@@ -792,9 +1151,50 @@ copyBtn.addEventListener('click', async () => {
         temp.select();
         document.execCommand('copy');
         document.body.removeChild(temp);
-        showSuccess('📋 คัดลอกสำเร็จ!');
+        showSuccess('📋 คัดลอกทั้งหมดสำเร็จ!');
     }
 });
+
+// Copy selected text
+if (copySelectedBtn) {
+    copySelectedBtn.addEventListener('click', async () => {
+        const selectedText = window.getSelection().toString();
+        
+        if (!selectedText || selectedText.trim().length === 0) {
+            showError('กรุณาเลือกข้อความที่ต้องการคัดลอกก่อน (ลากเมาส์เลือกข้อความ)');
+            return;
+        }
+        
+        try {
+            await navigator.clipboard.writeText(selectedText);
+            showSuccess(`✂️ คัดลอกส่วนที่เลือกสำเร็จ! (${selectedText.length} ตัวอักษร)`);
+        } catch (error) {
+            const temp = document.createElement('textarea');
+            temp.value = selectedText;
+            document.body.appendChild(temp);
+            temp.select();
+            document.execCommand('copy');
+            document.body.removeChild(temp);
+            showSuccess(`✂️ คัดลอกส่วนที่เลือกสำเร็จ! (${selectedText.length} ตัวอักษร)`);
+        }
+    });
+}
+
+// Show/hide copy selected button based on text selection
+if (resultDisplay) {
+    document.addEventListener('selectionchange', () => {
+        if (resultSection.classList.contains('active')) {
+            const selection = window.getSelection();
+            const selectedText = selection.toString();
+            
+            if (selectedText && selectedText.trim().length > 0) {
+                copySelectedBtn.style.display = 'flex';
+            } else {
+                copySelectedBtn.style.display = 'none';
+            }
+        }
+    });
+}
 
 downloadTxtBtn.addEventListener('click', () => {
     if (!fullOCRResult) {
@@ -821,14 +1221,12 @@ downloadWordBtn.addEventListener('click', () => {
         return;
     }
     
-    // Create Word document content
     const header = `<!DOCTYPE html>
 <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
 <head><meta charset='utf-8'><title>OCR Result</title></head><body>`;
     
     const footer = '</body></html>';
     
-    // Convert line breaks to paragraphs
     const content = fullOCRResult
         .split('\n')
         .map(line => `<p>${line || '&nbsp;'}</p>`)
@@ -853,11 +1251,37 @@ downloadWordBtn.addEventListener('click', () => {
 });
 
 // ============================================
+// REPROCESS BUTTON
+// ============================================
+
+const reprocessBtn = document.getElementById('reprocessBtn');
+if (reprocessBtn) {
+    reprocessBtn.addEventListener('click', async () => {
+        if (!selectedFile || !pdfDocument) {
+            showError('ไม่มีไฟล์ให้ประมวลผลใหม่');
+            return;
+        }
+        
+        console.log('🔄 กำลังประมวลผลใหม่...');
+        
+        // Hide result, show page selector
+        resultSection.classList.remove('active');
+        pageSelectorSection.classList.add('active');
+    });
+}
+
+// ============================================
 // RESET
 // ============================================
 
 newBtn.addEventListener('click', () => {
+    resetToUpload();
+});
+
+function resetToUpload() {
     selectedFile = null;
+    pdfDocument = null;
+    totalPages = 0;
     fullOCRResult = null;
     documentMetadata = null;
     searchMatches = [];
@@ -869,8 +1293,11 @@ newBtn.addEventListener('click', () => {
     fileSize.textContent = '';
     resultDisplay.innerHTML = '';
     searchText.value = '';
+    selectedPages.clear();
+    visualPagesContainer.innerHTML = '';
     
-    // Reset Q&A button
+    stopTimer();
+    
     const qaToggleBtn = document.getElementById('qaToggleBtn');
     if (qaToggleBtn) {
         qaToggleBtn.style.background = '#64748b';
@@ -881,15 +1308,22 @@ newBtn.addEventListener('click', () => {
         metadataSection.style.display = 'none';
     }
     
+    if (copySelectedBtn) {
+        copySelectedBtn.style.display = 'none';
+    }
+    
+    uploadSection.style.display = 'block';
+    pageSelectorSection.classList.remove('active');
+    progressSection.classList.remove('active');
     previewSection.classList.remove('active');
     resultSection.classList.remove('active');
-    loadingSection.classList.remove('active');
     formatToolbar.classList.remove('active');
+    visualPageGrid.style.display = 'none';
     
     updateSearchCounter();
     hideError();
     hideSuccess();
-});
+}
 
 // ============================================
 // UTILITY FUNCTIONS

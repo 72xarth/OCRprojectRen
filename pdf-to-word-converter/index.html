@@ -5,6 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>OCR Document System - ระบบแปลงเอกสาร</title>
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- PDF.js Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script>
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    </script>
     <style>
         * {
             margin: 0;
@@ -136,9 +141,438 @@
             box-shadow: none;
         }
 
+        /* Page Selector Section */
+        .page-selector-section {
+            display: none;
+            background: white;
+            border-radius: 12px;
+            padding: 40px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            border: 2px solid #1e40af;
+        }
+
+        .page-selector-section.active {
+            display: block;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .page-selector-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #1e40af;
+        }
+
+        .page-selector-title {
+            font-size: 1.8em;
+            color: #1e3a8a;
+            font-weight: 700;
+        }
+
+        .page-count-badge {
+            background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+            color: white;
+            padding: 10px 25px;
+            border-radius: 25px;
+            font-size: 1.2em;
+            font-weight: 700;
+        }
+
+        .page-options {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .page-option {
+            background: #f8fafc;
+            padding: 20px 25px;
+            border-radius: 10px;
+            border: 3px solid #e2e8f0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .page-option:hover {
+            border-color: #3b82f6;
+            background: #eff6ff;
+            transform: translateX(5px);
+        }
+
+        .page-option.selected {
+            border-color: #1e40af;
+            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+            box-shadow: 0 4px 16px rgba(30, 64, 175, 0.2);
+        }
+
+        .page-option input[type="radio"] {
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+            accent-color: #1e40af;
+        }
+
+        .page-option-label {
+            flex: 1;
+            font-size: 1.3em;
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .page-option-input {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .page-option-input input[type="number"],
+        .page-option-input input[type="text"] {
+            padding: 10px 15px;
+            border: 2px solid #1e40af;
+            border-radius: 6px;
+            font-size: 1.1em;
+            font-family: 'TH SarabunIT๙', 'Sarabun', sans-serif;
+            width: 100px;
+            text-align: center;
+        }
+
+        .page-option-input input[type="text"] {
+            width: 250px;
+            text-align: left;
+        }
+
+        .page-option-input span {
+            font-size: 1.1em;
+            color: #64748b;
+            font-weight: 600;
+        }
+
+        /* Visual Page Grid */
+        .visual-page-grid {
+            margin-top: 20px;
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 25px;
+            border: 2px solid #1e40af;
+            animation: slideDown 0.3s ease;
+        }
+
+        .visual-grid-header {
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #cbd5e1;
+        }
+
+        .visual-grid-btn {
+            padding: 8px 16px;
+            border: 2px solid #1e40af;
+            background: white;
+            color: #1e40af;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: 'TH SarabunIT๙', 'Sarabun', sans-serif;
+            font-size: 1em;
+        }
+
+        .visual-grid-btn:hover {
+            background: #1e40af;
+            color: white;
+            transform: translateY(-1px);
+        }
+
+        .visual-pages-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+            gap: 12px;
+            max-height: 400px;
+            overflow-y: auto;
+            padding: 10px;
+        }
+
+        .visual-pages-container::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .visual-pages-container::-webkit-scrollbar-track {
+            background: #e2e8f0;
+            border-radius: 4px;
+        }
+
+        .visual-pages-container::-webkit-scrollbar-thumb {
+            background: #1e40af;
+            border-radius: 4px;
+        }
+
+        .visual-page-item {
+            aspect-ratio: 1;
+            border: 3px solid #cbd5e1;
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .visual-page-item:hover {
+            border-color: #3b82f6;
+            transform: translateY(-3px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+
+        .visual-page-item.selected {
+            border-color: #059669;
+            background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+            box-shadow: 0 4px 16px rgba(5, 150, 105, 0.4);
+        }
+
+        .visual-page-item.selected::before {
+            content: '✓';
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: #059669;
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .visual-page-number {
+            font-size: 1.4em;
+            font-weight: 700;
+            color: #1e40af;
+        }
+
+        .visual-page-item.selected .visual-page-number {
+            color: #065f46;
+        }
+
+        .visual-page-label {
+            font-size: 0.85em;
+            color: #64748b;
+            margin-top: 4px;
+        }
+
+        .page-action-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .page-btn {
+            padding: 16px 40px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.2em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'TH SarabunIT๙', 'Sarabun', sans-serif;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .page-btn-start {
+            background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3);
+        }
+
+        .page-btn-start:hover {
+            background: linear-gradient(135deg, #047857 0%, #059669 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(5, 150, 105, 0.4);
+        }
+
+        .page-btn-cancel {
+            background: #64748b;
+            color: white;
+            box-shadow: 0 4px 12px rgba(100, 116, 139, 0.3);
+        }
+
+        .page-btn-cancel:hover {
+            background: #475569;
+            transform: translateY(-2px);
+        }
+
+        /* Progress Section */
+        .progress-section {
+            display: none;
+            background: white;
+            border-radius: 12px;
+            padding: 40px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            border: 2px solid #1e40af;
+        }
+
+        .progress-section.active {
+            display: block;
+        }
+
+        .progress-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .progress-title {
+            font-size: 1.8em;
+            color: #1e3a8a;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .progress-subtitle {
+            font-size: 1.2em;
+            color: #64748b;
+        }
+
+        .progress-bar-container {
+            background: #e2e8f0;
+            height: 40px;
+            border-radius: 20px;
+            overflow: hidden;
+            margin-bottom: 20px;
+            position: relative;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .progress-bar {
+            background: linear-gradient(90deg, #1e40af 0%, #3b82f6 50%, #60a5fa 100%);
+            height: 100%;
+            width: 0%;
+            transition: width 0.5s ease;
+            border-radius: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .progress-bar::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, 
+                transparent 0%, 
+                rgba(255,255,255,0.3) 50%, 
+                transparent 100%);
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .progress-text {
+            text-align: center;
+            font-size: 1.3em;
+            color: #1e40af;
+            font-weight: 700;
+            margin-top: 10px;
+        }
+
+        .progress-details {
+            background: #f8fafc;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            border-left: 5px solid #3b82f6;
+        }
+
+        .progress-detail-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            font-size: 1.1em;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .progress-detail-item:last-child {
+            border-bottom: none;
+        }
+
+        .progress-detail-label {
+            color: #64748b;
+            font-weight: 600;
+        }
+
+        .progress-detail-value {
+            color: #1e40af;
+            font-weight: 700;
+        }
+
+        .page-result-status {
+            margin-top: 20px;
+            max-height: 200px;
+            overflow-y: auto;
+            background: #f8fafc;
+            padding: 15px;
+            border-radius: 8px;
+        }
+
+        .page-status-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 12px;
+            margin-bottom: 8px;
+            border-radius: 6px;
+            font-size: 1.05em;
+        }
+
+        .page-status-item.processing {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .page-status-item.success {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .page-status-item.error {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
         .preview-section {
             display: none;
-            margin-bottom: 30px;
         }
 
         .preview-section.active {
@@ -605,9 +1039,24 @@
             font-family: 'TH SarabunIT๙', 'Sarabun', 'TH Sarabun New', sans-serif;
             scroll-behavior: smooth;
             position: relative;
+            user-select: text;
+            -webkit-user-select: text;
+            -moz-user-select: text;
+            -ms-user-select: text;
         }
 
-        /* Custom Scrollbar - ภายใน box */
+        /* Selection styling */
+        .result-display-full::selection {
+            background: #bfdbfe;
+            color: #1e293b;
+        }
+
+        .result-display-full::-moz-selection {
+            background: #bfdbfe;
+            color: #1e293b;
+        }
+
+        /* Custom Scrollbar */
         .result-display-full::-webkit-scrollbar {
             width: 10px;
         }
@@ -755,6 +1204,12 @@
             .upload-section {
                 padding: 40px 20px;
             }
+            .page-selector-section {
+                padding: 25px 20px;
+            }
+            .progress-section {
+                padding: 25px 20px;
+            }
             .action-btn-top {
                 font-size: 0.85em;
                 padding: 9px 14px;
@@ -782,8 +1237,8 @@
     <div class="container">
         <div class="header">
             <div class="header-content">
-                <h1>📋 ระบบแปลงเอกสารอัจฉริยะ</h1>
-                <p>OCR Document Processing System - รองรับภาษาไทยและอังกฤษด้วย AI</p>
+                <h1>📋 ระบบแปลงเอกสารอัจฉริยะ (ใหม่! เลือกหน้าได้)</h1>
+                <p>OCR Document Processing System - รองรับภาษาไทยและอังกฤษด้วย AI + เลือกหน้าที่ต้องการแปลง</p>
             </div>
         </div>
 
@@ -791,6 +1246,7 @@
             <div class="error" id="errorMessage"></div>
             <div class="success" id="successMessage"></div>
 
+            <!-- Upload Section -->
             <div class="upload-section" id="uploadSection">
                 <div class="upload-icon">📄</div>
                 <h2 style="color: #1e3a8a; margin-bottom: 18px; font-size: 1.8em; font-weight: 700;">อัปโหลดไฟล์ PDF</h2>
@@ -804,6 +1260,128 @@
                 </p>
             </div>
 
+            <!-- Page Selector Section -->
+            <div class="page-selector-section" id="pageSelectorSection">
+                <div class="page-selector-header">
+                    <div class="page-selector-title">📑 เลือกหน้าที่ต้องการแปลง</div>
+                    <div class="page-count-badge" id="pageCountBadge">0 หน้า</div>
+                </div>
+
+                <div class="page-options" id="pageOptions">
+                    <div class="page-option" data-mode="all">
+                        <input type="radio" name="pageMode" value="all" id="modeAll" checked>
+                        <div style="flex: 1;">
+                            <label for="modeAll" class="page-option-label">
+                                ✅ แปลงทุกหน้า (แนะนำสำหรับเอกสารสั้น)
+                            </label>
+                            <p style="margin-top: 5px; color: #64748b; font-size: 1.05em;">
+                                จะแปลงทั้งหมด <span id="totalPagesAll">0</span> หน้า
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="page-option" data-mode="range">
+                        <input type="radio" name="pageMode" value="range" id="modeRange">
+                        <div style="flex: 1;">
+                            <label for="modeRange" class="page-option-label">
+                                📊 เลือกช่วงหน้า (หน้าที่ 1 ถึง 10 เป็นต้น)
+                            </label>
+                            <div class="page-option-input">
+                                <span>หน้าที่</span>
+                                <input type="number" id="startPage" min="1" value="1">
+                                <span>ถึง</span>
+                                <input type="number" id="endPage" min="1" value="1">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="page-option" data-mode="specific">
+                        <input type="radio" name="pageMode" value="specific" id="modeSpecific">
+                        <div style="flex: 1;">
+                            <label for="modeSpecific" class="page-option-label">
+                                🎯 เลือกหน้าเฉพาะ (ระบุเองแบบแม่นยำ)
+                            </label>
+                            <div class="page-option-input">
+                                <input type="text" id="specificPages" placeholder="เช่น 1,3,5-7,10">
+                            </div>
+                            <p style="margin-top: 8px; color: #64748b; font-size: 0.95em;">
+                                💡 ตัวอย่าง: 1,3,5 หรือ 1-5,8,10-12
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="page-option" data-mode="visual">
+                        <input type="radio" name="pageMode" value="visual" id="modeVisual">
+                        <div style="flex: 1;">
+                            <label for="modeVisual" class="page-option-label">
+                                🖱️ คลิกเลือกหน้า (แบบเห็นภาพ - แนะนำ!)
+                            </label>
+                            <p style="margin-top: 5px; color: #64748b; font-size: 1.05em;">
+                                คลิกเลือกหน้าที่ต้องการได้เลย ง่ายที่สุด!
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Visual Page Grid -->
+                <div class="visual-page-grid" id="visualPageGrid" style="display: none;">
+                    <div class="visual-grid-header">
+                        <div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
+                            <span style="font-weight: 700; color: #1e40af; font-size: 1.1em;">เลือกหน้าที่ต้องการ:</span>
+                            <span id="selectedPagesCount" style="color: #059669; font-weight: 700; font-size: 1.1em;">เลือกแล้ว 0 หน้า</span>
+                            <button class="visual-grid-btn" id="selectAllPages">✓ เลือกทั้งหมด</button>
+                            <button class="visual-grid-btn" id="deselectAllPages">✗ ยกเลิกทั้งหมด</button>
+                        </div>
+                    </div>
+                    <div class="visual-pages-container" id="visualPagesContainer">
+                        <!-- Pages will be generated here -->
+                    </div>
+                </div>
+
+                <div class="page-action-buttons">
+                    <button class="page-btn page-btn-start" id="confirmPageSelection">
+                        <span>🚀</span> เริ่มแปลงหน้าที่เลือก
+                    </button>
+                    <button class="page-btn page-btn-cancel" id="cancelPageSelection">
+                        <span>↩</span> เลือกไฟล์ใหม่
+                    </button>
+                </div>
+            </div>
+
+            <!-- Progress Section -->
+            <div class="progress-section" id="progressSection">
+                <div class="progress-header">
+                    <div class="progress-title">⚡ กำลังประมวลผล OCR</div>
+                    <div class="progress-subtitle">โปรดรอสักครู่...</div>
+                </div>
+
+                <div class="progress-bar-container">
+                    <div class="progress-bar" id="progressBar"></div>
+                </div>
+                <div class="progress-text" id="progressText">กำลังเริ่มต้น...</div>
+
+                <div class="progress-details">
+                    <div class="progress-detail-item">
+                        <span class="progress-detail-label">หน้าที่กำลังประมวลผล:</span>
+                        <span class="progress-detail-value" id="currentPageNum">-</span>
+                    </div>
+                    <div class="progress-detail-item">
+                        <span class="progress-detail-label">สำเร็จแล้ว:</span>
+                        <span class="progress-detail-value" id="successCount">0</span>
+                    </div>
+                    <div class="progress-detail-item">
+                        <span class="progress-detail-label">ล้มเหลว:</span>
+                        <span class="progress-detail-value" id="errorCount">0</span>
+                    </div>
+                    <div class="progress-detail-item">
+                        <span class="progress-detail-label">เวลาที่ใช้:</span>
+                        <span class="progress-detail-value" id="elapsedTime">0 วินาที</span>
+                    </div>
+                </div>
+
+                <div class="page-result-status" id="pageResultStatus"></div>
+            </div>
+
             <div class="preview-section" id="previewSection">
                 <h3 style="margin-bottom: 18px; color: #1e3a8a; font-weight: 700; font-size: 1.4em;">📄 ไฟล์ที่เลือก:</h3>
                 <div style="padding: 25px; background: white; border-radius: 12px; margin-bottom: 25px; border: 2px solid #e2e8f0; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
@@ -815,17 +1393,15 @@
                 </button>
             </div>
 
-            <div class="loading" id="loadingSection">
-                <div class="spinner"></div>
-                <p style="color: #1e40af; font-size: 1.4em; font-weight: 700; margin-bottom: 10px;">กำลังประมวลผล...</p>
-                <p style="color: #64748b; font-size: 1.1em;">โปรดรอสักครู่ ระบบกำลังแปลงเอกสารของคุณ</p>
-            </div>
-
+            <!-- Result Section -->
             <div class="result-section" id="resultSection">
                 <div class="top-action-bar">
                     <div class="action-group">
                         <button class="action-btn-top copy-btn-top" id="copyBtn">
-                            <span>📋</span> คัดลอก
+                            <span>📋</span> คัดลอกทั้งหมด
+                        </button>
+                        <button class="action-btn-top copy-btn-top" id="copySelectedBtn" style="display: none;">
+                            <span>✂️</span> คัดลอกที่เลือก
                         </button>
                         <button class="action-btn-top download-word-btn" id="downloadWordBtn">
                             <span>📘</span> Word
@@ -910,10 +1486,20 @@
             </div>
 
             <div class="info-section">
-                <h3>📌 คู่มือการใช้งานระบบ</h3>
+                <h3>📌 คู่มือการใช้งานระบบ (เวอร์ชันใหม่)</h3>
                 <ul>
                     <li>📤 เลือกหรือลากวางไฟล์ PDF ที่ต้องการแปลงเป็นข้อความ</li>
-                    <li>🚀 กดปุ่ม "เริ่มแปลงเอกสาร" และรอระบบประมวลผล (ใช้เวลาประมาณ 10-30 วินาที)</li>
+                    <li>📑 <strong>ใหม่!</strong> เลือกหน้าที่ต้องการแปลง 4 วิธี:
+                        <ul style="margin-left: 30px; margin-top: 8px;">
+                            <li>✅ ทุกหน้า (แนะนำสำหรับเอกสารสั้น)</li>
+                            <li>📊 ช่วงหน้า (เช่น หน้า 1-10)</li>
+                            <li>🎯 พิมพ์ระบุ (เช่น 1,3,5-7,10)</li>
+                            <li>🖱️ <strong>คลิกเลือก</strong> - ง่ายที่สุด! คลิกหน้าที่ต้องการได้เลย</li>
+                        </ul>
+                    </li>
+                    <li>🚀 กดปุ่ม "เริ่มแปลงหน้าที่เลือก" และดูความคืบหน้าแบบเรียลไทม์</li>
+                    <li>⚡ ระบบจะแปลงทีละหน้า แม่นยำกว่า ข้อความไม่หาย!</li>
+                    <li>✂️ <strong>ใหม่!</strong> คัดลอกได้ 2 แบบ: ทั้งหมด หรือ เลือกเฉพาะส่วนที่ต้องการ (ลากเมาส์เลือกข้อความแล้วกดปุ่ม)</li>
                     <li>🔄 หากผลลัพธ์ไม่ถูกต้อง กดปุ่ม "แปลงอีกรอบ" เพราะ AI อาจให้ผลต่างกันในแต่ละครั้ง</li>
                     <li>🔢 ระบบจะแปลงเลขอารบิก (0-9) เป็นเลขไทย (๐-๙) อัตโนมัติทั้งหมด</li>
                     <li>📌 ระบบจะดึงข้อมูลสำคัญจากหน้าแรกมาแสดงอัตโนมัติ (เลขที่เอกสาร วันที่ ผู้ส่ง ฯลฯ)</li>
@@ -921,13 +1507,12 @@
                     <li>🔍 ใช้ช่องค้นหาเพื่อค้นหาข้อความที่ต้องการ กด Enter เพื่อข้ามไปยังคำถัดไป</li>
                     <li>📘 ดาวน์โหลดผลลัพธ์เป็นไฟล์ Word (.doc) หรือ Text (.txt) เพื่อนำไปใช้งานต่อ</li>
                     <li>🎨 ปรับแต่งขนาดตัวอักษร ระยะบรรทัด และฟอนต์ให้เหมาะกับการอ่าน</li>
-                    <li>📋 คัดลอกข้อความทั้งหมดหรือเฉพาะข้อมูลเกริ่นนำได้ด้วยปุ่มคัดลอก</li>
                 </ul>
             </div>
         </div>
 
         <div class="footer">
-            <p>© 2025 OCR Document System | Powered by Mistral AI Technology</p>
+            <p>© 2025 OCR Document System v2.0 | Powered by Mistral AI Technology | 🆕 Page-by-Page Processing</p>
         </div>
     </div>
 
