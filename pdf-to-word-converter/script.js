@@ -1031,6 +1031,33 @@ if (copyFromOriginalBtn) {
     });
 }
 
+// Handle Tab key for indentation in editor
+editorContent.addEventListener('keydown', (e) => {
+    if (e.key === 'Tab') {
+        e.preventDefault();
+        
+        // Insert tab character (or multiple spaces for indent)
+        const tabCharacter = '\u00a0\u00a0\u00a0\u00a0'; // 4 non-breaking spaces
+        
+        // Get selection
+        const selection = window.getSelection();
+        if (!selection.rangeCount) return;
+        
+        const range = selection.getRangeAt(0);
+        range.deleteContents();
+        
+        // Insert tab
+        const tabNode = document.createTextNode(tabCharacter);
+        range.insertNode(tabNode);
+        
+        // Move cursor after tab
+        range.setStartAfter(tabNode);
+        range.setEndAfter(tabNode);
+        selection.removeAllRanges();
+        selection.addRange(range);
+    }
+});
+
 // Editor formatting buttons
 boldBtn.addEventListener('click', () => {
     document.execCommand('bold', false, null);
@@ -1046,6 +1073,33 @@ underlineBtn.addEventListener('click', () => {
     document.execCommand('underline', false, null);
     underlineBtn.classList.toggle('active');
 });
+
+// Indent and Outdent buttons
+const indentBtn = document.createElement('button');
+indentBtn.className = 'editor-btn';
+indentBtn.id = 'indentBtn';
+indentBtn.title = 'เพิ่มย่อหน้า (Tab)';
+indentBtn.innerHTML = '→';
+indentBtn.addEventListener('click', () => {
+    document.execCommand('indent', false, null);
+});
+
+const outdentBtn = document.createElement('button');
+outdentBtn.className = 'editor-btn';
+outdentBtn.id = 'outdentBtn';
+outdentBtn.title = 'ลดย่อหน้า (Shift+Tab)';
+outdentBtn.innerHTML = '←';
+outdentBtn.addEventListener('click', () => {
+    document.execCommand('outdent', false, null);
+});
+
+// Insert indent/outdent buttons after underline button
+const editorToolbar = document.querySelector('.editor-toolbar');
+const firstSeparator = editorToolbar.querySelectorAll('.editor-separator')[0];
+if (firstSeparator && firstSeparator.nextElementSibling) {
+    firstSeparator.parentNode.insertBefore(indentBtn, firstSeparator.nextElementSibling);
+    firstSeparator.parentNode.insertBefore(outdentBtn, firstSeparator.nextElementSibling);
+}
 
 // Font size change (apply to entire editor content)
 fontSizeEditor.addEventListener('change', () => {
@@ -1326,6 +1380,10 @@ downloadWordBtn.addEventListener('click', () => {
     if (useEditor) {
         // Use editor content with formatting
         htmlContent = editorContent.innerHTML;
+        
+        // แปลง tab (4 non-breaking spaces) เป็น indent style
+        htmlContent = htmlContent.replace(/(\u00a0{4})/g, '<span style="padding-left: 2em;"></span>');
+        
     } else {
         // Use original OCR result
         if (!fullOCRResult) {
@@ -1421,6 +1479,10 @@ li {
 td, th {
     font-family: ${fontFamily} !important;
     font-size: ${fontSizePt} !important;
+}
+/* รองรับ tab indent */
+.tab-indent {
+    padding-left: 2em;
 }
 </style>
 </head>
