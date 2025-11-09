@@ -1031,32 +1031,22 @@ if (copyFromOriginalBtn) {
     });
 }
 
-// Handle Tab key for indentation in editor
+// Handle Tab key for indentation in editor - แก้ไขให้จับ Tab ได้จริง
 editorContent.addEventListener('keydown', (e) => {
     if (e.key === 'Tab') {
         e.preventDefault();
+        e.stopPropagation();
         
-        // Insert tab character (or multiple spaces for indent)
-        const tabCharacter = '\u00a0\u00a0\u00a0\u00a0'; // 4 non-breaking spaces
-        
-        // Get selection
-        const selection = window.getSelection();
-        if (!selection.rangeCount) return;
-        
-        const range = selection.getRangeAt(0);
-        range.deleteContents();
-        
-        // Insert tab
-        const tabNode = document.createTextNode(tabCharacter);
-        range.insertNode(tabNode);
-        
-        // Move cursor after tab
-        range.setStartAfter(tabNode);
-        range.setEndAfter(tabNode);
-        selection.removeAllRanges();
-        selection.addRange(range);
+        // ใช้ execCommand indent/outdent ซึ่ง Word รู้จัก
+        if (e.shiftKey) {
+            // Shift+Tab = outdent
+            document.execCommand('outdent', false, null);
+        } else {
+            // Tab = indent
+            document.execCommand('indent', false, null);
+        }
     }
-});
+}, true); // ใช้ capture phase เพื่อจับก่อน
 
 // Editor formatting buttons
 boldBtn.addEventListener('click', () => {
@@ -1380,10 +1370,6 @@ downloadWordBtn.addEventListener('click', () => {
     if (useEditor) {
         // Use editor content with formatting
         htmlContent = editorContent.innerHTML;
-        
-        // แปลง tab (4 non-breaking spaces) เป็น indent style
-        htmlContent = htmlContent.replace(/(\u00a0{4})/g, '<span style="padding-left: 2em;"></span>');
-        
     } else {
         // Use original OCR result
         if (!fullOCRResult) {
@@ -1480,9 +1466,14 @@ td, th {
     font-family: ${fontFamily} !important;
     font-size: ${fontSizePt} !important;
 }
-/* รองรับ tab indent */
-.tab-indent {
-    padding-left: 2em;
+/* รองรับ indent จาก execCommand */
+blockquote {
+    font-family: ${fontFamily} !important;
+    font-size: ${fontSizePt} !important;
+    margin-left: 40px;
+    margin-right: 0;
+    border: none;
+    padding: 0;
 }
 </style>
 </head>
@@ -1505,7 +1496,7 @@ td, th {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
     
-    showSuccess(`📘 ดาวน์โหลด Word สำเร็จ! (${fontSizeNum}pt ทั้งหมด - TH Sarabun New${useEditor ? ' - ฉบับแก้ไข' : ''})`);
+    showSuccess(`📘 ดาวน์โหลด Word สำเร็จ! (${fontSizeNum}pt ทั้งหมด + รองรับ Tab${useEditor ? ' - ฉบับแก้ไข' : ''})`);
 });
 
 // ============================================
