@@ -100,6 +100,18 @@ function convertToThaiNumbers(text) {
     return text.replace(/[0-9]/g, (match) => arabicToThai[match] || match);
 }
 
+// Clean text by removing pipe characters
+function cleanText(text) {
+    if (!text) return '';
+    
+    // Remove standalone pipes and pipes with spaces around them
+    return text
+        .replace(/\|\s+/g, '') // Remove | followed by spaces
+        .replace(/\s+\|/g, '') // Remove spaces followed by |
+        .replace(/\|/g, '')    // Remove remaining standalone |
+        .trim();
+}
+
 // ============================================
 // FILE HANDLING
 // ============================================
@@ -432,17 +444,20 @@ async function processSelectedPages(pages) {
                 const fileId = await uploadFile(singlePagePDF);
                 const pageText = await performPDFOCR(fileId);
                 
+                // Clean the text (remove pipes)
+                const cleanedText = cleanText(pageText);
+                
                 results.push({
                     page: pageNum,
-                    text: pageText,
+                    text: cleanedText,
                     success: true
                 });
                 
                 successfulPages++;
                 successCount.textContent = successfulPages;
                 
-                updatePageStatus(pageNum, 'success', `${pageText.length} ตัวอักษร`);
-                console.log(`✅ หน้า ${pageNum} สำเร็จ (${pageText.length} ตัวอักษร)`);
+                updatePageStatus(pageNum, 'success', `${cleanedText.length} ตัวอักษร`);
+                console.log(`✅ หน้า ${pageNum} สำเร็จ (${cleanedText.length} ตัวอักษร)`);
                 
             } catch (error) {
                 console.error(`❌ หน้า ${pageNum} ล้มเหลว:`, error);
@@ -1321,23 +1336,27 @@ downloadWordBtn.addEventListener('click', () => {
     }
     
     // Get actual font size and family from editor (computed style)
-    let fontSize = '26px';
+    let fontSizePx = '26px';
     let fontFamily = "'TH Sarabun New', 'TH SarabunIT๙', 'Sarabun', sans-serif";
     
     if (useEditor) {
         // Get computed style from editor content
         const computedStyle = window.getComputedStyle(editorContent);
-        fontSize = computedStyle.fontSize || fontSizeEditor.value || '26px';
+        fontSizePx = computedStyle.fontSize || fontSizeEditor.value || '26px';
         fontFamily = computedStyle.fontFamily || fontFamilyEditor.value || "'TH Sarabun New', 'TH SarabunIT๙', 'Sarabun', sans-serif";
         
         // Also try to get from dropdown if available
         if (fontSizeEditor.value) {
-            fontSize = fontSizeEditor.value;
+            fontSizePx = fontSizeEditor.value;
         }
         if (fontFamilyEditor.value) {
             fontFamily = fontFamilyEditor.value;
         }
     }
+    
+    // Convert px to pt for Word (direct conversion: 26px in browser = 26pt in Word)
+    const fontSizeNum = parseInt(fontSizePx);
+    const fontSizePt = fontSizeNum + 'pt';
     
     const header = `<!DOCTYPE html>
 <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
@@ -1345,20 +1364,63 @@ downloadWordBtn.addEventListener('click', () => {
 <meta charset='utf-8'>
 <title>OCR Result</title>
 <style>
+@page {
+    margin: 1in;
+}
+/* CRITICAL: Force ทุก element ให้เป็น font size เดียวกัน */
+* {
+    font-family: ${fontFamily} !important;
+    font-size: ${fontSizePt} !important;
+}
 body {
-    font-family: ${fontFamily};
-    font-size: ${fontSize};
+    font-family: ${fontFamily} !important;
+    font-size: ${fontSizePt} !important;
     line-height: 1.8;
 }
 p {
-    font-family: ${fontFamily};
-    font-size: ${fontSize};
+    font-family: ${fontFamily} !important;
+    font-size: ${fontSizePt} !important;
     line-height: 1.8;
     margin: 0.5em 0;
 }
 div {
-    font-family: ${fontFamily};
-    font-size: ${fontSize};
+    font-family: ${fontFamily} !important;
+    font-size: ${fontSizePt} !important;
+}
+span {
+    font-family: ${fontFamily} !important;
+    font-size: ${fontSizePt} !important;
+}
+strong, b {
+    font-family: ${fontFamily} !important;
+    font-size: ${fontSizePt} !important;
+    font-weight: bold;
+}
+em, i {
+    font-family: ${fontFamily} !important;
+    font-size: ${fontSizePt} !important;
+    font-style: italic;
+}
+u {
+    font-family: ${fontFamily} !important;
+    font-size: ${fontSizePt} !important;
+    text-decoration: underline;
+}
+h1, h2, h3, h4, h5, h6 {
+    font-family: ${fontFamily} !important;
+    font-size: ${fontSizePt} !important;
+}
+a {
+    font-family: ${fontFamily} !important;
+    font-size: ${fontSizePt} !important;
+}
+li {
+    font-family: ${fontFamily} !important;
+    font-size: ${fontSizePt} !important;
+}
+td, th {
+    font-family: ${fontFamily} !important;
+    font-size: ${fontSizePt} !important;
 }
 </style>
 </head>
@@ -1381,7 +1443,7 @@ div {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
     
-    showSuccess(`📘 ดาวน์โหลด Word สำเร็จ! (${fontSize} TH Sarabun New${useEditor ? ' - ฉบับแก้ไข' : ''})`);
+    showSuccess(`📘 ดาวน์โหลด Word สำเร็จ! (${fontSizeNum}pt ทั้งหมด - TH Sarabun New${useEditor ? ' - ฉบับแก้ไข' : ''})`);
 });
 
 // ============================================
